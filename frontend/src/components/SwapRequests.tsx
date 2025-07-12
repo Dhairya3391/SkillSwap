@@ -8,20 +8,20 @@ import {
   deleteSwap,
 } from "../features/swaps/swapsSlice";
 import { User } from "../types";
+import { getAllUsers } from "../services/userService";
 
 interface SwapRequestsProps {
-  users: User[];
   currentUser: User;
 }
 
 export const SwapRequests: React.FC<SwapRequestsProps> = ({
-  users,
   currentUser,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { swaps, loading, error } = useSelector(
     (state: RootState) => state.swaps
   );
+  const [users, setUsers] = useState<User[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     toUserId: "",
@@ -32,6 +32,16 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
 
   useEffect(() => {
     dispatch(fetchSwaps());
+    // Fetch users for the form
+    const fetchUsers = async () => {
+      try {
+        const fetchedUsers = await getAllUsers();
+        setUsers(fetchedUsers);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      }
+    };
+    fetchUsers();
   }, [dispatch]);
 
   const handleInputChange = (
@@ -82,9 +92,9 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
             >
               <option value="">Select a user</option>
               {users
-                .filter((u) => u.id !== currentUser.id)
+                .filter((u) => u._id !== currentUser._id)
                 .map((u) => (
-                  <option key={u.id} value={u.id}>
+                  <option key={u._id} value={u._id}>
                     {u.name} ({u.email})
                   </option>
                 ))}
@@ -152,7 +162,7 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
               </div>
             </div>
             <div className="mt-2 md:mt-0 flex space-x-2">
-              {swap.toUserId?._id === currentUser.id &&
+              {swap.toUserId?._id === currentUser._id &&
                 swap.status === "pending" && (
                   <>
                     <button
@@ -169,8 +179,8 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
                     </button>
                   </>
                 )}
-              {(swap.fromUserId?._id === currentUser.id ||
-                swap.toUserId?._id === currentUser.id) && (
+              {(swap.fromUserId?._id === currentUser._id ||
+                swap.toUserId?._id === currentUser._id) && (
                 <button
                   className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
                   onClick={() => handleDelete(swap._id)}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Header } from "./components/Header";
 import { UserProfile } from "./components/UserProfile";
@@ -7,18 +7,15 @@ import { SwapRequests } from "./components/SwapRequests";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { Login, Register } from "./components/Auth/index.ts";
 import { NotFound } from "./components/NotFound";
-import { mockUsers, mockRequests, mockFeedback } from "./data/mockData";
-import type { User, SwapRequest, Feedback, AdminMessage } from "./types";
+import type { User } from "./types";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "./store";
 import { fetchCurrentUser } from "./features/auth/authSlice";
 
 // Wrapper component for dynamic user profile routing
 const UserProfileWrapper: React.FC<{
-  users: User[];
   currentUser: User;
-  onUpdateUser: (user: User) => void;
-}> = ({ users, currentUser, onUpdateUser }) => {
+}> = ({ currentUser }) => {
   const { userId } = useParams<{ userId: string }>();
 
   if (!userId) {
@@ -26,36 +23,18 @@ const UserProfileWrapper: React.FC<{
     return (
       <UserProfile
         user={currentUser}
-        onUpdateUser={onUpdateUser}
         isOwnProfile={true}
       />
     );
   }
 
-  // Find the user by ID
-  const user = users.find((u) => u._id === userId);
-
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
-  const isOwnProfile = user._id === currentUser._id;
-
-  return (
-    <UserProfile
-      user={user}
-      onUpdateUser={onUpdateUser}
-      isOwnProfile={isOwnProfile}
-    />
-  );
+  // For now, we'll redirect to the main profile page
+  // In a real app, you'd fetch the specific user data
+  return <Navigate to="/profile" replace />;
 };
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [requests, setRequests] = useState<SwapRequest[]>(mockRequests);
-  const [feedback, setFeedback] = useState<Feedback[]>(mockFeedback);
-  const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
 
   // Get current user from Redux
   const { user: currentUser, loading: authLoading } = useSelector(
@@ -70,111 +49,14 @@ function App() {
     }
   }, [dispatch, currentUser]);
 
-  const handleUpdateUser = (updatedUser: User) => {
-    setUsers(users.map((u) => (u._id === updatedUser._id ? updatedUser : u)));
-  };
-
-  const handleRequestSwap = (
-    fromUser: User,
-    toUser: User,
-    skillOffered: string,
-    skillWanted: string
-  ) => {
-    const newRequest: SwapRequest = {
-      id: Date.now().toString(),
-      fromUserId: fromUser._id,
-      toUserId: toUser._id,
-      skillOffered,
-      skillWanted,
-      message: "",
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setRequests([...requests, newRequest]);
-  };
-
-  const handleUpdateRequest = (requestId: string, status: string) => {
-    setRequests(
-      requests.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: status as
-                | "pending"
-                | "accepted"
-                | "rejected"
-                | "completed"
-                | "cancelled",
-              updatedAt: new Date().toISOString(),
-            }
-          : r
-      )
-    );
-  };
-
-  const handleDeleteRequest = (requestId: string) => {
-    setRequests(requests.filter((r) => r.id !== requestId));
-  };
-
-  const handleSubmitFeedback = (
-    swapId: string,
-    rating: number,
-    comment: string
-  ) => {
-    const request = requests.find((r) => r.id === swapId);
-    if (request && currentUser) {
-      const newFeedback: Feedback = {
-        id: Date.now().toString(),
-        swapId,
-        fromUserId: currentUser._id,
-        toUserId:
-          request.fromUserId === currentUser._id
-            ? request.toUserId
-            : request.fromUserId,
-        rating,
-        comment,
-        createdAt: new Date().toISOString(),
-      };
-      setFeedback([...feedback, newFeedback]);
-
-      // Update user ratings
-      const targetUserId = newFeedback.toUserId;
-      const userFeedbacks = [...feedback, newFeedback].filter(
-        (f) => f.toUserId === targetUserId
-      );
-      const averageRating =
-        userFeedbacks.reduce((sum, f) => sum + f.rating, 0) /
-        userFeedbacks.length;
-
-      setUsers(
-        users.map((u) =>
-          u._id === targetUserId ? { ...u, rating: averageRating } : u
-        )
-      );
-    }
-  };
-
-  const handleBanUser = (userId: string) => {
-    setUsers(
-      users.map((u) => (u._id === userId ? { ...u, isBanned: true } : u))
-    );
-  };
-
-  const handleUnbanUser = (userId: string) => {
-    setUsers(
-      users.map((u) => (u._id === userId ? { ...u, isBanned: false } : u))
-    );
-  };
-
-  const handleSendMessage = (message: AdminMessage) => {
-    setAdminMessages([...adminMessages, message]);
-  };
-
-  // Calculate notifications
+  // Calculate notifications from Redux swaps state
+  const swaps = useSelector((state: RootState) => state.swaps.swaps);
   const notifications = currentUser
-    ? requests.filter(
-        (r) => r.toUserId === currentUser._id && r.status === "pending"
+    ? swaps.filter(
+        (swap) => {
+          const toUserId = typeof swap.toUserId === 'string' ? swap.toUserId : swap.toUserId._id;
+          return toUserId === currentUser._id && swap.status === "pending";
+        }
       ).length
     : 0;
 
@@ -196,9 +78,7 @@ function App() {
                 </div>
               ) : currentUser ? (
                 <SkillBrowser
-                  users={users}
                   currentUser={currentUser}
-                  onRequestSwap={handleRequestSwap}
                 />
               ) : (
                 <Navigate to="/auth/login" replace />
@@ -216,7 +96,6 @@ function App() {
               ) : currentUser ? (
                 <UserProfile
                   user={currentUser}
-                  onUpdateUser={handleUpdateUser}
                   isOwnProfile={true}
                 />
               ) : (
@@ -234,9 +113,7 @@ function App() {
                 </div>
               ) : currentUser ? (
                 <UserProfileWrapper
-                  users={users}
                   currentUser={currentUser}
-                  onUpdateUser={handleUpdateUser}
                 />
               ) : (
                 <Navigate to="/auth/login" replace />
@@ -247,12 +124,10 @@ function App() {
           <Route
             path="/swaps"
             element={
-              authLoading ? (
-                <div className="flex justify-center items-center h-40 text-lg">
-                  Loading...
-                </div>
-              ) : currentUser ? (
-                <SwapRequests users={users} currentUser={currentUser} />
+              currentUser ? (
+                <SwapRequests
+                  currentUser={currentUser}
+                />
               ) : (
                 <Navigate to="/auth/login" replace />
               )
@@ -262,19 +137,8 @@ function App() {
           <Route
             path="/admin"
             element={
-              authLoading ? (
-                <div className="flex justify-center items-center h-40 text-lg">
-                  Loading...
-                </div>
-              ) : currentUser && currentUser.isAdmin ? (
-                <AdminDashboard
-                  users={users}
-                  requests={requests}
-                  feedback={feedback}
-                  onBanUser={handleBanUser}
-                  onUnbanUser={handleUnbanUser}
-                  onSendMessage={handleSendMessage}
-                />
+              currentUser && currentUser.isAdmin ? (
+                <AdminDashboard />
               ) : (
                 <Navigate to="/" replace />
               )

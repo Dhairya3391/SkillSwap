@@ -47,4 +47,17 @@ export const getAllUsers = async (skill?: string, location?: string): Promise<Us
   
   const response = await api.get(`/users?${params.toString()}`);
   return response.data;
+};
+
+// Admin functions
+export const banUser = async (userId: string): Promise<void> => {
+  await api.post(`/users/${userId}/ban`);
+};
+
+export const unbanUser = async (userId: string): Promise<void> => {
+  await api.post(`/users/${userId}/unban`);
+};
+
+export const deleteUser = async (userId: string): Promise<void> => {
+  await api.delete(`/users/${userId}`);
 }; 

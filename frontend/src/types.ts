@@ -1,6 +1,5 @@
 export interface User {
   _id: string;
-  id?: string; // For backward compatibility
   name: string;
   email: string;
   location?: string;
@@ -19,32 +18,34 @@ export interface User {
 }
 
 export interface SwapRequest {
-  id: string;
-  fromUserId: string;
-  toUserId: string;
+  _id: string;
+  fromUserId: string | User; // Can be string or populated User object
+  toUserId: string | User; // Can be string or populated User object
   skillOffered: string;
   skillWanted: string;
-  message: string;
+  message?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Feedback {
-  id: string;
+  _id: string;
   swapId: string;
-  fromUserId: string;
-  toUserId: string;
+  fromUserId: string | User; // Can be string or populated User object
+  toUserId: string | User; // Can be string or populated User object
   rating: number;
   comment: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface AdminMessage {
-  id: string;
+  _id: string;
   title: string;
   content: string;
   type: 'info' | 'warning' | 'update' | 'maintenance';
   createdAt: string;
+  updatedAt?: string;
   isActive: boolean;
 }
