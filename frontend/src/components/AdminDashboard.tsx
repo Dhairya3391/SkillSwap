@@ -6,9 +6,7 @@ import { fetchSwaps } from '../features/swaps/swapsSlice';
 import { getAllUsers } from '../services/userService';
 import type { User } from '../types';
 
-interface AdminDashboardProps {}
-
-export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
+export const AdminDashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { swaps } = useSelector((state: RootState) => state.swaps);
   const [users, setUsers] = useState<User[]>([]);
@@ -385,7 +383,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Message Type</label>
                 <select
                   value={messageType}
-                  onChange={(e) => setMessageType(e.target.value as any)}
+                  onChange={(e) => setMessageType(e.target.value as 'info' | 'warning' | 'update' | 'maintenance')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="info">Information</option>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   Search,
   Filter,
@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import type { User } from "../types";
-import { RootState, AppDispatch } from "../store";
+import { AppDispatch } from "../store";
 import { createSwap } from "../features/swaps/swapsSlice";
 import { getAllUsers } from "../services/userService";
 

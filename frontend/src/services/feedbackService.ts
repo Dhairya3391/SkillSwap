@@ -1,10 +1,11 @@
 import api from '../features/auth/axiosConfig';
+import type { User } from '../types';
 
 export interface Feedback {
   _id: string;
   swapId: string;
-  fromUserId: any;
-  toUserId: any;
+  fromUserId: string | User;
+  toUserId: string | User;
   rating: number;
   comment: string;
   createdAt: string;

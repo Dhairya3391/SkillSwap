@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as swapApi from "./swapApi";
 import { toast } from "react-toastify";
+import type { User, SwapRequest } from "../../types";
 
 export interface Swap {
   _id: string;
-  fromUserId: any;
-  toUserId: any;
+  fromUserId: string | User;
+  toUserId: string | User;
   skillOffered: string;
   skillWanted: string;
   message?: string;
@@ -32,10 +33,11 @@ export const fetchSwaps = createAsyncThunk(
     try {
       const res = await swapApi.getAllSwaps();
       return res.data;
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to fetch swaps");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to fetch swaps");
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch swaps"
+        error.response?.data?.message || "Failed to fetch swaps"
       );
     }
   }
@@ -43,15 +45,16 @@ export const fetchSwaps = createAsyncThunk(
 
 export const createSwap = createAsyncThunk(
   "swaps/create",
-  async (data: any, { rejectWithValue }) => {
+  async (data: Omit<SwapRequest, '_id' | 'status' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
     try {
       const res = await swapApi.createSwap(data);
       toast.success("Swap request sent!");
       return res.data;
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create swap");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to create swap");
       return rejectWithValue(
-        err.response?.data?.message || "Failed to create swap"
+        error.response?.data?.message || "Failed to create swap"
       );
     }
   }
@@ -67,10 +70,11 @@ export const updateSwap = createAsyncThunk(
       const res = await swapApi.updateSwapStatus(id, status);
       toast.success("Swap status updated!");
       return res.data;
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to update swap");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to update swap");
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update swap"
+        error.response?.data?.message || "Failed to update swap"
       );
     }
   }
@@ -83,10 +87,11 @@ export const deleteSwap = createAsyncThunk(
       await swapApi.deleteSwap(id);
       toast.success("Swap deleted!");
       return id;
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete swap");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to delete swap");
       return rejectWithValue(
-        err.response?.data?.message || "Failed to delete swap"
+        error.response?.data?.message || "Failed to delete swap"
       );
     }
   }
