@@ -1,22 +1,24 @@
-import React from 'react';
-import { User, Settings, Bell, Search, MessageSquare } from 'lucide-react';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { User, Settings, Bell, Search, MessageSquare } from "lucide-react";
 
 interface HeaderProps {
   currentUser: any;
-  currentView: string;
-  onViewChange: (view: string) => void;
   notifications: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentUser, currentView, onViewChange, notifications }) => {
+export const Header: React.FC<HeaderProps> = ({
+  currentUser,
+  notifications,
+}) => {
   const navItems = [
-    { id: 'browse', label: 'Browse Skills', icon: Search },
-    { id: 'profile', label: 'My Profile', icon: User },
-    { id: 'swaps', label: 'My Swaps', icon: MessageSquare },
+    { id: "/", label: "Browse Skills", icon: Search },
+    { id: "/profile", label: "My Profile", icon: User },
+    { id: "/swaps", label: "My Swaps", icon: MessageSquare },
   ];
 
   if (currentUser?.isAdmin) {
-    navItems.push({ id: 'admin', label: 'Admin', icon: Settings });
+    navItems.push({ id: "/admin", label: "Admin", icon: Settings });
   }
 
   return (
@@ -25,9 +27,11 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, currentView, onView
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                SkillSwap
-              </h1>
+              <NavLink to={"/"}>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  SkillSwap
+                </h1>
+              </NavLink>
             </div>
           </div>
 
@@ -35,18 +39,20 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, currentView, onView
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <button
+                <NavLink
                   key={item.id}
-                  onClick={() => onViewChange(item.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    currentView === item.id
-                      ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
+                  to={item.id}
+                  className={({ isActive }) =>
+                    `flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-blue-50 text-blue-700 border-b-2 border-blue-700"
+                        : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                    }`
+                  }
                 >
                   <Icon size={18} />
                   <span>{item.label}</span>
-                </button>
+                </NavLink>
               );
             })}
           </nav>
@@ -60,12 +66,14 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, currentView, onView
                 </span>
               )}
             </button>
-            
+
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                 <User size={16} className="text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">{currentUser?.name}</span>
+              <span className="text-sm font-medium text-gray-700">
+                {currentUser?.name}
+              </span>
             </div>
           </div>
         </div>
