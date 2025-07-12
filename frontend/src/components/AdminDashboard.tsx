@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Users, MessageSquare, AlertTriangle, Download, Send, Ban, CheckCircle, XCircle, BarChart3 } from 'lucide-react';
+import { Users, MessageSquare, AlertTriangle, Download, Send, CheckCircle, BarChart3 } from 'lucide-react';
+import type { User, SwapRequest, Feedback, AdminMessage } from '../types';
 
 interface AdminDashboardProps {
-  users: any[];
-  requests: any[];
-  feedback: any[];
+  users: User[];
+  requests: SwapRequest[];
+  feedback: Feedback[];
   onBanUser: (userId: string) => void;
   onUnbanUser: (userId: string) => void;
-  onSendMessage: (message: any) => void;
+  onSendMessage: (message: AdminMessage) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -22,7 +23,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageTitle, setMessageTitle] = useState('');
   const [messageContent, setMessageContent] = useState('');
-  const [messageType, setMessageType] = useState('info');
+  const [messageType, setMessageType] = useState<'info' | 'warning' | 'update' | 'maintenance'>('info');
 
   const stats = {
     totalUsers: users.length,
@@ -263,14 +264,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {user.isBanned ? (
                           <button
-                            onClick={() => onUnbanUser(user.id)}
+                            onClick={() => onUnbanUser(user._id)}
                             className="text-green-600 hover:text-green-900"
                           >
                             Unban
                           </button>
                         ) : (
                           <button
-                            onClick={() => onBanUser(user.id)}
+                            onClick={() => onBanUser(user._id)}
                             className="text-red-600 hover:text-red-900"
                           >
                             Ban
@@ -392,7 +393,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">Message Type</label>
                 <select
                   value={messageType}
-                  onChange={(e) => setMessageType(e.target.value)}
+                  onChange={(e) => setMessageType(e.target.value as 'info' | 'warning' | 'update' | 'maintenance')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="info">Information</option>

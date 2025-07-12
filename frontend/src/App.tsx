@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Header } from "./components/Header";
 import { UserProfile } from "./components/UserProfile";
@@ -9,8 +9,9 @@ import { Login, Register } from "./components/Auth/index.ts";
 import { NotFound } from "./components/NotFound";
 import { mockUsers, mockRequests, mockFeedback } from "./data/mockData";
 import type { User, SwapRequest, Feedback, AdminMessage } from "./types";
-import { useSelector } from "react-redux";
-import { RootState } from "./store";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "./store";
+import { fetchCurrentUser } from "./features/auth/authSlice";
 
 // Wrapper component for dynamic user profile routing
 const UserProfileWrapper: React.FC<{
@@ -32,13 +33,13 @@ const UserProfileWrapper: React.FC<{
   }
 
   // Find the user by ID
-  const user = users.find((u) => u.id === userId);
+  const user = users.find((u) => u._id === userId);
 
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  const isOwnProfile = user.id === currentUser.id;
+  const isOwnProfile = user._id === currentUser._id;
 
   return (
     <UserProfile
@@ -50,6 +51,7 @@ const UserProfileWrapper: React.FC<{
 };
 
 function App() {
+  const dispatch = useDispatch<AppDispatch>();
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [requests, setRequests] = useState<SwapRequest[]>(mockRequests);
   const [feedback, setFeedback] = useState<Feedback[]>(mockFeedback);
@@ -58,8 +60,16 @@ function App() {
   // Get current user from Redux
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
+  // Fetch current user on app load if token exists
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token && !currentUser) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch, currentUser]);
+
   const handleUpdateUser = (updatedUser: User) => {
-    setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+    setUsers(users.map((u) => (u._id === updatedUser._id ? updatedUser : u)));
   };
 
   const handleRequestSwap = (
@@ -70,8 +80,8 @@ function App() {
   ) => {
     const newRequest: SwapRequest = {
       id: Date.now().toString(),
-      fromUserId: fromUser.id,
-      toUserId: toUser.id,
+      fromUserId: fromUser._id,
+      toUserId: toUser._id,
       skillOffered,
       skillWanted,
       message: "",
@@ -86,7 +96,7 @@ function App() {
     setRequests(
       requests.map((r) =>
         r.id === requestId
-          ? { ...r, status: status as any, updatedAt: new Date().toISOString() }
+          ? { ...r, status: status as 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled', updatedAt: new Date().toISOString() }
           : r
       )
     );
@@ -106,9 +116,9 @@ function App() {
       const newFeedback: Feedback = {
         id: Date.now().toString(),
         swapId,
-        fromUserId: currentUser.id,
+        fromUserId: currentUser._id,
         toUserId:
-          request.fromUserId === currentUser.id
+          request.fromUserId === currentUser._id
             ? request.toUserId
             : request.fromUserId,
         rating,
@@ -128,7 +138,7 @@ function App() {
 
       setUsers(
         users.map((u) =>
-          u.id === targetUserId ? { ...u, rating: averageRating } : u
+          u._id === targetUserId ? { ...u, rating: averageRating } : u
         )
       );
     }
@@ -136,13 +146,13 @@ function App() {
 
   const handleBanUser = (userId: string) => {
     setUsers(
-      users.map((u) => (u.id === userId ? { ...u, isBanned: true } : u))
+      users.map((u) => (u._id === userId ? { ...u, isBanned: true } : u))
     );
   };
 
   const handleUnbanUser = (userId: string) => {
     setUsers(
-      users.map((u) => (u.id === userId ? { ...u, isBanned: false } : u))
+      users.map((u) => (u._id === userId ? { ...u, isBanned: false } : u))
     );
   };
 
@@ -153,7 +163,7 @@ function App() {
   // Calculate notifications
   const notifications = currentUser
     ? requests.filter(
-        (r) => r.toUserId === currentUser.id && r.status === "pending"
+        (r) => r.toUserId === currentUser._id && r.status === "pending"
       ).length
     : 0;
 

@@ -8,13 +8,14 @@ import {
   MessageCircle,
   Users,
 } from "lucide-react";
+import type { User } from "../types";
 
 interface SkillBrowserProps {
-  users: any[];
-  currentUser: any;
+  users: User[];
+  currentUser: User;
   onRequestSwap: (
-    fromUser: any,
-    toUser: any,
+    fromUser: User,
+    toUser: User,
     skillOffered: string,
     skillWanted: string
   ) => void;
@@ -29,13 +30,13 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [mySkillToOffer, setMySkillToOffer] = useState("");
   const [requestMessage, setRequestMessage] = useState("");
 
   const filteredUsers = users.filter((user) => {
-    if (user.id === currentUser.id || !user.isPublic || user.isBanned)
+    if (user._id === currentUser._id || !user.isPublic || user.isBanned)
       return false;
 
     const matchesSearch =
@@ -65,14 +66,14 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
     }
   };
 
-  const openRequestModal = (user: any, skill: string) => {
+  const openRequestModal = (user: User, skill: string) => {
     setSelectedUser(user);
     setSelectedSkill(skill);
     setShowRequestModal(true);
   };
 
-  const handleViewProfile = (user: any) => {
-    navigate(`/profile/${user.id}`);
+  const handleViewProfile = (user: User) => {
+    navigate(`/profile/${user._id}`);
   };
 
   return (
@@ -121,7 +122,7 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
       <div className="flex lg:flex-row md:flex-col gap-6 flex-wrap items-center">
         {filteredUsers.map((user) => (
           <div
-            key={user.id}
+            key={user._id}
             className="rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 w-[30%] ring-1"
           >
             {/* User Info */}

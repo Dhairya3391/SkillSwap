@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Clock, CheckCircle, XCircle, Star, MessageSquare, Trash2, User } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Star, MessageSquare, Trash2, User as UserIcon } from 'lucide-react';
+import type { User, SwapRequest } from '../types';
 
 interface SwapRequestsProps {
-  requests: any[];
-  users: any[];
-  currentUser: any;
+  requests: SwapRequest[];
+  users: User[];
+  currentUser: User;
   onUpdateRequest: (requestId: string, status: string) => void;
   onDeleteRequest: (requestId: string) => void;
   onSubmitFeedback: (swapId: string, rating: number, comment: string) => void;
@@ -20,14 +21,14 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('received');
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [selectedSwap, setSelectedSwap] = useState<any>(null);
+  const [selectedSwap, setSelectedSwap] = useState<SwapRequest | null>(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
 
-  const getUserById = (id: string) => users.find(u => u.id === id);
+  const getUserById = (id: string) => users.find(u => u._id === id);
 
-  const receivedRequests = requests.filter(r => r.toUserId === currentUser.id);
-  const sentRequests = requests.filter(r => r.fromUserId === currentUser.id);
+  const receivedRequests = requests.filter(r => r.toUserId === currentUser._id);
+  const sentRequests = requests.filter(r => r.fromUserId === currentUser._id);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -50,12 +51,12 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
     }
   };
 
-  const openFeedbackModal = (swap: any) => {
+  const openFeedbackModal = (swap: SwapRequest) => {
     setSelectedSwap(swap);
     setShowFeedbackModal(true);
   };
 
-  const RequestCard = ({ request, isReceived }: { request: any; isReceived: boolean }) => {
+  const RequestCard = ({ request, isReceived }: { request: SwapRequest; isReceived: boolean }) => {
     const otherUser = getUserById(isReceived ? request.fromUserId : request.toUserId);
     if (!otherUser) return null;
 
@@ -64,7 +65,7 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-              <User size={16} className="text-white" />
+              <UserIcon size={16} className="text-white" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">{otherUser.name}</h3>

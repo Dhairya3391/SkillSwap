@@ -1,6 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { User } from "../../types";
 import api from "./axiosConfig";
+import { getCurrentUser, updateUser as updateUserApi, getUserById, UpdateUserData } from "../../services/userService";
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 interface AuthState {
   user: User | null;
@@ -33,9 +42,10 @@ export const registerUser = createAsyncThunk(
         password,
       });
       return res.data;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       return rejectWithValue(
-        err.response?.data?.message || "Registration failed"
+        error.response?.data?.message || "Registration failed"
       );
     }
   }
@@ -50,8 +60,54 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await api.post("/auth/login", { email, password });
       return res.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Login failed");
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      return rejectWithValue(error.response?.data?.message || "Login failed");
+    }
+  }
+);
+
+// Get current user profile
+export const fetchCurrentUser = createAsyncThunk(
+  "auth/fetchCurrentUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await getCurrentUser();
+      return user;
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch user");
+    }
+  }
+);
+
+// Update user profile
+export const updateUserProfile = createAsyncThunk(
+  "auth/updateUserProfile",
+  async (
+    { userId, userData }: { userId: string; userData: UpdateUserData },
+    { rejectWithValue }
+  ) => {
+    try {
+      const updatedUser = await updateUserApi(userId, userData);
+      return updatedUser;
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      return rejectWithValue(error.response?.data?.message || "Failed to update user");
+    }
+  }
+);
+
+// Get user by ID
+export const fetchUserById = createAsyncThunk(
+  "auth/fetchUserById",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const user = await getUserById(userId);
+      return user;
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch user");
     }
   }
 );
@@ -100,6 +156,32 @@ const authSlice = createSlice({
         localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        localStorage.setItem("user", JSON.stringify(action.payload));
+      })
+      .addCase(fetchCurrentUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateUserProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        localStorage.setItem("user", JSON.stringify(action.payload));
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

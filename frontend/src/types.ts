@@ -1,5 +1,6 @@
 export interface User {
-  id: string;
+  _id: string;
+  id?: string; // For backward compatibility
   name: string;
   email: string;
   location?: string;
@@ -13,6 +14,8 @@ export interface User {
   joinDate: string;
   isAdmin: boolean;
   isBanned: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SwapRequest {

@@ -4,9 +4,10 @@ import { User, Settings, Bell, Search, MessageSquare } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { logout } from "../features/auth/authSlice";
 import { toast } from "react-toastify";
+import type { User as UserType } from "../types";
 
 interface HeaderProps {
-  currentUser: any;
+  currentUser: UserType | null;
   notifications: number;
 }
 

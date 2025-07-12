@@ -1,21 +1,50 @@
-import React, { useState } from 'react';
-import { User, MapPin, Calendar, Star, Edit2, Save, X, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, MapPin, Calendar, Star, Edit2, Save, X, Plus, Loader2 } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store';
+import { updateUserProfile } from '../features/auth/authSlice';
+import type { User as UserType } from '../types';
 
 interface UserProfileProps {
-  user: any;
-  onUpdateUser: (user: any) => void;
+  user: UserType;
+  onUpdateUser?: (user: UserType) => void;
   isOwnProfile: boolean;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, isOwnProfile }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
   const [newSkillOffered, setNewSkillOffered] = useState('');
   const [newSkillWanted, setNewSkillWanted] = useState('');
 
-  const handleSave = () => {
-    onUpdateUser(editedUser);
-    setIsEditing(false);
+  // Update editedUser when user prop changes
+  useEffect(() => {
+    setEditedUser(user);
+  }, [user]);
+
+  const handleSave = async () => {
+    try {
+      const userId = user._id || user.id;
+      if (!userId) {
+        console.error('No user ID found');
+        return;
+      }
+      
+      await dispatch(updateUserProfile({ 
+        userId, 
+        userData: editedUser 
+      })).unwrap();
+      
+      setIsEditing(false);
+      if (onUpdateUser) {
+        onUpdateUser(editedUser);
+      }
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
   };
 
   const addSkill = (type: 'offered' | 'wanted') => {
@@ -35,15 +64,37 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
     const skillsKey = type === 'offered' ? 'skillsOffered' : 'skillsWanted';
     setEditedUser({
       ...editedUser,
-      [skillsKey]: editedUser[skillsKey].filter((_: any, i: number) => i !== index)
+      [skillsKey]: editedUser[skillsKey].filter((_: string, i: number) => i !== index)
     });
   };
 
   const availabilityOptions = ['Weekdays', 'Weekends', 'Evenings', 'Mornings', 'Flexible'];
 
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+            <span className="ml-2 text-gray-600">Loading profile...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-t-lg">
+            <div className="flex items-center">
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8 text-white">
           <div className="flex items-center justify-between">
@@ -271,17 +322,23 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
             <div className="flex space-x-3 pt-4 border-t border-gray-200">
               <button
                 onClick={handleSave}
-                className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                disabled={loading}
+                className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save size={16} />
-                <span>Save Changes</span>
+                {loading ? (
+                  <Loader2 className="animate-spin h-4 w-4" />
+                ) : (
+                  <Save size={16} />
+                )}
+                <span>{loading ? 'Saving...' : 'Save Changes'}</span>
               </button>
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setEditedUser(user);
                 }}
-                className="flex items-center space-x-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                disabled={loading}
+                className="flex items-center space-x-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <X size={16} />
                 <span>Cancel</span>
