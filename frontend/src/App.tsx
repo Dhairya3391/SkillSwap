@@ -5,9 +5,12 @@ import { UserProfile } from "./components/UserProfile";
 import { SkillBrowser } from "./components/SkillBrowser";
 import { SwapRequests } from "./components/SwapRequests";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { Login, Register } from "./components/Auth/index.ts";
 import { NotFound } from "./components/NotFound";
 import { mockUsers, mockRequests, mockFeedback } from "./data/mockData";
 import type { User, SwapRequest, Feedback, AdminMessage } from "./types";
+import { useSelector } from "react-redux";
+import { RootState } from "./store";
 
 // Wrapper component for dynamic user profile routing
 const UserProfileWrapper: React.FC<{
@@ -52,8 +55,8 @@ function App() {
   const [feedback, setFeedback] = useState<Feedback[]>(mockFeedback);
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
 
-  // Current user (first user in mock data)
-  const currentUser = users[0];
+  // Get current user from Redux
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const handleUpdateUser = (updatedUser: User) => {
     setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
@@ -99,7 +102,7 @@ function App() {
     comment: string
   ) => {
     const request = requests.find((r) => r.id === swapId);
-    if (request) {
+    if (request && currentUser) {
       const newFeedback: Feedback = {
         id: Date.now().toString(),
         swapId,
@@ -148,9 +151,11 @@ function App() {
   };
 
   // Calculate notifications
-  const notifications = requests.filter(
-    (r) => r.toUserId === currentUser.id && r.status === "pending"
-  ).length;
+  const notifications = currentUser
+    ? requests.filter(
+        (r) => r.toUserId === currentUser.id && r.status === "pending"
+      ).length
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -158,57 +163,76 @@ function App() {
 
       <main className="py-8">
         <Routes>
+          <Route path="/auth/register" element={<Register />} />
+          <Route path="/auth/login" element={<Login />} />
+
           <Route
             path="/"
             element={
-              <SkillBrowser
-                users={users}
-                currentUser={currentUser}
-                onRequestSwap={handleRequestSwap}
-              />
+              currentUser ? (
+                <SkillBrowser
+                  users={users}
+                  currentUser={currentUser}
+                  onRequestSwap={handleRequestSwap}
+                />
+              ) : (
+                <Navigate to="/auth/login" replace />
+              )
             }
           />
 
           <Route
             path="/profile"
             element={
-              <UserProfile
-                user={currentUser}
-                onUpdateUser={handleUpdateUser}
-                isOwnProfile={true}
-              />
+              currentUser ? (
+                <UserProfile
+                  user={currentUser}
+                  onUpdateUser={handleUpdateUser}
+                  isOwnProfile={true}
+                />
+              ) : (
+                <Navigate to="/auth/login" replace />
+              )
             }
           />
 
           <Route
             path="/profile/:userId"
             element={
-              <UserProfileWrapper
-                users={users}
-                currentUser={currentUser}
-                onUpdateUser={handleUpdateUser}
-              />
+              currentUser ? (
+                <UserProfileWrapper
+                  users={users}
+                  currentUser={currentUser}
+                  onUpdateUser={handleUpdateUser}
+                />
+              ) : (
+                <Navigate to="/auth/login" replace />
+              )
             }
           />
 
           <Route
             path="/swaps"
             element={
-              <SwapRequests
-                requests={requests}
-                users={users}
-                currentUser={currentUser}
-                onUpdateRequest={handleUpdateRequest}
-                onDeleteRequest={handleDeleteRequest}
-                onSubmitFeedback={handleSubmitFeedback}
-              />
+              currentUser ? (
+                <SwapRequests
+                  requests={requests}
+                  users={users}
+                  currentUser={currentUser}
+                  onUpdateRequest={handleUpdateRequest}
+                  onDeleteRequest={handleDeleteRequest}
+                  onSubmitFeedback={handleSubmitFeedback}
+                />
+              ) : (
+                <Navigate to="/auth/login" replace />
+              )
             }
           />
 
           <Route
             path="/admin"
             element={
-              currentUser.isAdmin ? (
+              currentUser && currentUser.isAdmin ? (
                 <AdminDashboard
                   users={users}
                   requests={requests}

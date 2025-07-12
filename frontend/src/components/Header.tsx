@@ -1,6 +1,9 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { User, Settings, Bell, Search, MessageSquare } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { logout } from "../features/auth/authSlice";
+import { toast } from "react-toastify";
 
 interface HeaderProps {
   currentUser: any;
@@ -11,6 +14,9 @@ export const Header: React.FC<HeaderProps> = ({
   currentUser,
   notifications,
 }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const navItems = [
     { id: "/", label: "Browse Skills", icon: Search },
     { id: "/profile", label: "My Profile", icon: User },
@@ -20,6 +26,12 @@ export const Header: React.FC<HeaderProps> = ({
   if (currentUser?.isAdmin) {
     navItems.push({ id: "/admin", label: "Admin", icon: Settings });
   }
+
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success("Logged out successfully!");
+    navigate("/auth/login");
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -35,47 +47,84 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          <nav className="hidden md:flex space-x-8">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.id}
-                  to={item.id}
-                  className={({ isActive }) =>
-                    `flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-blue-50 text-blue-700 border-b-2 border-blue-700"
-                        : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                    }`
-                  }
-                >
-                  <Icon size={18} />
-                  <span>{item.label}</span>
-                </NavLink>
-              );
-            })}
-          </nav>
+          {currentUser ? (
+            <>
+              <nav className="hidden md:flex space-x-8">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.id}
+                      to={item.id}
+                      className={({ isActive }) =>
+                        `flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive
+                            ? "bg-blue-50 text-blue-700 border-b-2 border-blue-700"
+                            : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                        }`
+                      }
+                    >
+                      <Icon size={18} />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </nav>
 
-          <div className="flex items-center space-x-4">
-            <button className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
-              <Bell size={20} />
-              {notifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {notifications}
-                </span>
-              )}
-            </button>
+              <div className="flex items-center space-x-4">
+                <button className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
+                  <Bell size={20} />
+                  {notifications > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {notifications}
+                    </span>
+                  )}
+                </button>
 
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <User size={16} className="text-white" />
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <User size={16} className="text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    {currentUser?.name}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="ml-3 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm text-gray-700"
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
-              <span className="text-sm font-medium text-gray-700">
-                {currentUser?.name}
-              </span>
+            </>
+          ) : (
+            <div className="flex items-center space-x-4">
+              <NavLink
+                to="/auth/login"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-700 border-b-2 border-blue-700"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                  }`
+                }
+              >
+                Login
+              </NavLink>
+              <NavLink
+                to="/auth/register"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-green-50 text-green-700 border-b-2 border-green-700"
+                      : "text-gray-600 hover:text-green-600 hover:bg-gray-50"
+                  }`
+                }
+              >
+                Register
+              </NavLink>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </header>
