@@ -234,10 +234,10 @@ export const AdminDashboard: React.FC = () => {
             </h3>
             <div className="space-y-3">
               {swaps.slice(0, 5).map((swap) => {
-                const fromUser = users.find(
-                  (u) => u._id === swap.fromUserId._id,
-                );
-                const toUser = users.find((u) => u._id === swap.toUserId._id);
+                const fromUserId = typeof swap.fromUserId === 'string' ? swap.fromUserId : swap.fromUserId._id;
+                const toUserId = typeof swap.toUserId === 'string' ? swap.toUserId : swap.toUserId._id;
+                const fromUser = users.find((u) => u._id === fromUserId);
+                const toUser = users.find((u) => u._id === toUserId);
                 return (
                   <div
                     key={swap._id}
@@ -426,10 +426,10 @@ export const AdminDashboard: React.FC = () => {
                   {swaps.map((swap) => (
                     <tr key={swap._id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {swap.fromUserId?.name || "Unknown"}
+                        {typeof swap.fromUserId === 'string' ? 'Unknown' : swap.fromUserId?.name || "Unknown"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {swap.toUserId?.name || "Unknown"}
+                        {typeof swap.toUserId === 'string' ? 'Unknown' : swap.toUserId?.name || "Unknown"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {swap.skillOffered}

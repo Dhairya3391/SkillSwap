@@ -5,6 +5,7 @@ export const getSentSwaps = () => api.get("/swaps/sent");
 export const getReceivedSwaps = () => api.get("/swaps/received");
 export const getSwapById = (id: string) => api.get(`/swaps/${id}`);
 export const createSwap = (data: {
+  fromUserId: string;
   toUserId: string;
   skillOffered: string;
   skillWanted: string;

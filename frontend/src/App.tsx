@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Header } from "./components/Header";
 import { UserProfile } from "./components/UserProfile";
@@ -11,21 +11,78 @@ import type { User } from "./types";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "./store";
 import { fetchCurrentUser } from "./features/auth/authSlice";
+import { getUserById } from "./services/userService";
 
 // Wrapper component for dynamic user profile routing
 const UserProfileWrapper: React.FC<{
   currentUser: User;
 }> = ({ currentUser }) => {
   const { userId } = useParams<{ userId: string }>();
+  const [targetUser, setTargetUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!userId) {
-    // If no userId, show current user's profile
-    return <UserProfile user={currentUser} isOwnProfile={true} />;
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!userId) {
+        setTargetUser(currentUser);
+        setLoading(false);
+        return;
+      }
+
+      // If it's the current user's profile, use currentUser
+      if (userId === currentUser._id) {
+        setTargetUser(currentUser);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const userData = await getUserById(userId);
+        setTargetUser(userData);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+        setError('Failed to load user profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId, currentUser]);
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 text-blue-500 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            <span className="ml-2 text-gray-600">Loading profile...</span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // For now, we'll redirect to the main profile page
-  // In a real app, you'd fetch the specific user data
-  return <Navigate to="/profile" replace />;
+  if (error || !targetUser) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="text-red-500 text-lg mb-2">Error</div>
+              <div className="text-gray-600">{error || 'User not found'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isOwnProfile = targetUser._id === currentUser._id;
+  return <UserProfile user={targetUser} isOwnProfile={isOwnProfile} />;
 };
 
 function App() {

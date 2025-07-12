@@ -70,6 +70,7 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({ currentUser }) => {
     if (selectedUser && selectedSkill && mySkillToOffer) {
       dispatch(
         createSwap({
+          fromUserId: currentUser._id,
           toUserId: selectedUser._id,
           skillOffered: mySkillToOffer,
           skillWanted: selectedSkill,
