@@ -1,50 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Users, MessageSquare, AlertTriangle, Download, Send, CheckCircle, BarChart3 } from 'lucide-react';
-import type { User, SwapRequest, Feedback, AdminMessage } from '../types';
+import { RootState, AppDispatch } from '../store';
+import { fetchSwaps } from '../features/swaps/swapsSlice';
+import { getAllUsers } from '../services/userService';
+import type { User } from '../types';
 
-interface AdminDashboardProps {
-  users: User[];
-  requests: SwapRequest[];
-  feedback: Feedback[];
-  onBanUser: (userId: string) => void;
-  onUnbanUser: (userId: string) => void;
-  onSendMessage: (message: AdminMessage) => void;
-}
+interface AdminDashboardProps {}
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({
-  users,
-  requests,
-  feedback,
-  onBanUser,
-  onUnbanUser,
-  onSendMessage
-}) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { swaps } = useSelector((state: RootState) => state.swaps);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageTitle, setMessageTitle] = useState('');
   const [messageContent, setMessageContent] = useState('');
   const [messageType, setMessageType] = useState<'info' | 'warning' | 'update' | 'maintenance'>('info');
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        dispatch(fetchSwaps());
+        const fetchedUsers = await getAllUsers();
+        setUsers(fetchedUsers);
+      } catch (error) {
+        console.error('Failed to fetch admin data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [dispatch]);
+
   const stats = {
     totalUsers: users.length,
     activeUsers: users.filter(u => !u.isBanned).length,
     bannedUsers: users.filter(u => u.isBanned).length,
-    totalSwaps: requests.length,
-    pendingSwaps: requests.filter(r => r.status === 'pending').length,
-    completedSwaps: requests.filter(r => r.status === 'completed').length,
-    averageRating: feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.rating, 0) / feedback.length : 0
+    totalSwaps: swaps.length,
+    pendingSwaps: swaps.filter(r => r.status === 'pending').length,
+    completedSwaps: swaps.filter(r => r.status === 'completed').length,
+    averageRating: users.length > 0 ? users.reduce((sum, u) => sum + u.rating, 0) / users.length : 0
   };
 
   const handleSendMessage = () => {
     if (messageTitle && messageContent) {
-      onSendMessage({
-        id: Date.now().toString(),
-        title: messageTitle,
-        content: messageContent,
-        type: messageType,
-        createdAt: new Date().toISOString(),
-        isActive: true
-      });
+      // TODO: Implement admin message sending
+      console.log('Sending admin message:', { messageTitle, messageContent, messageType });
       setShowMessageModal(false);
       setMessageTitle('');
       setMessageContent('');
@@ -59,7 +62,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     switch (type) {
       case 'users':
         data = users.map(u => ({
-          id: u.id,
+          id: u._id,
           name: u.name,
           email: u.email,
           totalSwaps: u.totalSwaps,
@@ -70,12 +73,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         filename = 'users-report.json';
         break;
       case 'swaps':
-        data = requests;
+        data = swaps;
         filename = 'swaps-report.json';
-        break;
-      case 'feedback':
-        data = feedback;
-        filename = 'feedback-report.json';
         break;
       default:
         return;
@@ -89,6 +88,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">Loading admin dashboard...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -185,22 +194,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
             <div className="space-y-3">
-              {requests.slice(0, 5).map((request) => {
-                const fromUser = users.find(u => u.id === request.fromUserId);
-                const toUser = users.find(u => u.id === request.toUserId);
+              {swaps.slice(0, 5).map((swap) => {
+                const fromUser = users.find(u => u._id === swap.fromUserId._id);
+                const toUser = users.find(u => u._id === swap.toUserId._id);
                 return (
-                  <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={swap._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
-                      <span className="font-medium">{fromUser?.name}</span> requested to learn{' '}
-                      <span className="font-medium text-blue-600">{request.skillWanted}</span> from{' '}
-                      <span className="font-medium">{toUser?.name}</span>
+                      <span className="font-medium">{fromUser?.name || 'Unknown'}</span> requested to learn{' '}
+                      <span className="font-medium text-blue-600">{swap.skillWanted}</span> from{' '}
+                      <span className="font-medium">{toUser?.name || 'Unknown'}</span>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      request.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                      swap.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      swap.status === 'accepted' ? 'bg-green-100 text-green-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {request.status}
+                      {swap.status}
                     </span>
                   </div>
                 );
@@ -239,7 +248,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((user) => (
-                    <tr key={user.id}>
+                    <tr key={user._id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -262,21 +271,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {user.isBanned ? (
-                          <button
-                            onClick={() => onUnbanUser(user._id)}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            Unban
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => onBanUser(user._id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Ban
-                          </button>
-                        )}
+                        <button
+                          className={`px-3 py-1 rounded text-xs ${
+                            user.isBanned 
+                              ? 'bg-green-500 text-white hover:bg-green-600' 
+                              : 'bg-red-500 text-white hover:bg-red-600'
+                          }`}
+                          onClick={() => {
+                            // TODO: Implement ban/unban functionality
+                            console.log(`${user.isBanned ? 'Unban' : 'Ban'} user:`, user._id);
+                          }}
+                        >
+                          {user.isBanned ? 'Unban' : 'Ban'}
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -301,60 +308,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="text-2xl font-bold text-yellow-600">{stats.pendingSwaps}</div>
-              <div className="text-sm text-gray-600">Pending Swaps</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="text-2xl font-bold text-green-600">{stats.completedSwaps}</div>
-              <div className="text-sm text-gray-600">Completed Swaps</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalSwaps}</div>
-              <div className="text-sm text-gray-600">Total Swaps</div>
-            </div>
-          </div>
-
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skills</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offered</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wanted</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {requests.map((request) => {
-                    const fromUser = users.find(u => u.id === request.fromUserId);
-                    const toUser = users.find(u => u.id === request.toUserId);
-                    return (
-                      <tr key={request.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {fromUser?.name} → {toUser?.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {request.skillOffered} ↔ {request.skillWanted}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            request.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                            request.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {request.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {new Date(request.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {swaps.map((swap) => (
+                    <tr key={swap._id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {swap.fromUserId?.name || 'Unknown'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {swap.toUserId?.name || 'Unknown'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{swap.skillOffered}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{swap.skillWanted}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          swap.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          swap.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                          swap.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {swap.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(swap.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -366,18 +358,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {activeTab === 'messages' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Platform Messages</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Admin Messages</h3>
             <button
               onClick={() => setShowMessageModal(true)}
               className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
             >
               <Send size={16} />
-              <span>New Message</span>
+              <span>Send Message</span>
             </button>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <p className="text-gray-600">Send platform-wide announcements, updates, and alerts to all users.</p>
+            <p className="text-gray-600">No messages sent yet. Use the button above to send your first admin message.</p>
           </div>
         </div>
       )}
@@ -386,19 +378,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {showMessageModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Send Platform Message</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Send Admin Message</h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Message Type</label>
                 <select
                   value={messageType}
-                  onChange={(e) => setMessageType(e.target.value as 'info' | 'warning' | 'update' | 'maintenance')}
+                  onChange={(e) => setMessageType(e.target.value as any)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="info">Information</option>
-                  <option value="update">Feature Update</option>
                   <option value="warning">Warning</option>
+                  <option value="update">Update</option>
                   <option value="maintenance">Maintenance</option>
                 </select>
               </div>
@@ -409,8 +401,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   type="text"
                   value={messageTitle}
                   onChange={(e) => setMessageTitle(e.target.value)}
-                  placeholder="Message title"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Message title"
                 />
               </div>
 
@@ -419,9 +411,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <textarea
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
-                  placeholder="Message content"
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Message content"
                 />
               </div>
             </div>

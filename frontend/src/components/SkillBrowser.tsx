@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Search,
   Filter,
@@ -9,24 +10,21 @@ import {
   Users,
 } from "lucide-react";
 import type { User } from "../types";
+import { RootState, AppDispatch } from "../store";
+import { createSwap } from "../features/swaps/swapsSlice";
+import { getAllUsers } from "../services/userService";
 
 interface SkillBrowserProps {
-  users: User[];
   currentUser: User;
-  onRequestSwap: (
-    fromUser: User,
-    toUser: User,
-    skillOffered: string,
-    skillWanted: string
-  ) => void;
 }
 
 export const SkillBrowser: React.FC<SkillBrowserProps> = ({
-  users,
   currentUser,
-  onRequestSwap,
 }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -34,6 +32,21 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
   const [selectedSkill, setSelectedSkill] = useState("");
   const [mySkillToOffer, setMySkillToOffer] = useState("");
   const [requestMessage, setRequestMessage] = useState("");
+
+  // Fetch users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const fetchedUsers = await getAllUsers();
+        setUsers(fetchedUsers);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const filteredUsers = users.filter((user) => {
     if (user._id === currentUser._id || !user.isPublic || user.isBanned)
@@ -57,7 +70,12 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
 
   const handleRequestSwap = () => {
     if (selectedUser && selectedSkill && mySkillToOffer) {
-      onRequestSwap(currentUser, selectedUser, mySkillToOffer, selectedSkill);
+      dispatch(createSwap({
+        toUserId: selectedUser._id,
+        skillOffered: mySkillToOffer,
+        skillWanted: selectedSkill,
+        message: requestMessage
+      }));
       setShowRequestModal(false);
       setSelectedUser(null);
       setSelectedSkill("");
@@ -75,6 +93,16 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
   const handleViewProfile = (user: User) => {
     navigate(`/profile/${user._id}`);
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">Loading users...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -118,7 +146,6 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
       </div>
 
       {/* Results */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> */}
       <div className="flex lg:flex-row md:flex-col gap-6 flex-wrap items-center">
         {filteredUsers.map((user) => (
           <div
