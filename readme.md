@@ -4,6 +4,10 @@
 
 A modern skill exchange platform built for the Odoo hackathon, allowing users to connect, share skills, and learn from each other through a collaborative marketplace.
 
+## ⚠️ Note :
+
+- To get the most smooth experience please use desktop only for now.
+
 ## 🏆 Team Members
 
 - **Dhariya Adroja** - dhairyaadroja3391@gmail.com
