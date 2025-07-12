@@ -101,6 +101,18 @@ function App() {
     }
   }, [dispatch, currentUser]);
 
+  // Clear admin redirect flag when user logs out
+  useEffect(() => {
+    if (!currentUser) {
+      // Clear all admin redirect flags when no user is logged in
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('adminRedirected_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+  }, [currentUser]);
+
   // Calculate notifications from Redux swaps state
   const swaps = useSelector((state: RootState) => state.swaps.swaps);
   const notifications = currentUser
@@ -129,11 +141,18 @@ function App() {
                   Loading...
                 </div>
               ) : currentUser ? (
-                currentUser.isAdmin ? (
-                  <Navigate to="/admin" replace />
-                ) : (
-                  <SkillBrowser currentUser={currentUser} />
-                )
+                (() => {
+                  // Check if admin has been redirected to dashboard for this session
+                  const adminRedirected = localStorage.getItem(`adminRedirected_${currentUser._id}`);
+                  
+                  if (currentUser.isAdmin && !adminRedirected) {
+                    // Mark admin as redirected and redirect to admin dashboard
+                    localStorage.setItem(`adminRedirected_${currentUser._id}`, 'true');
+                    return <Navigate to="/admin" replace />;
+                  }
+                  
+                  return <SkillBrowser currentUser={currentUser} />;
+                })()
               ) : (
                 <Navigate to="/auth/login" replace />
               )
