@@ -8,6 +8,15 @@ import {
   Send,
   CheckCircle,
   BarChart3,
+  Shield,
+  Settings,
+  Activity,
+  TrendingUp,
+  UserCheck,
+  UserX,
+  Clock,
+  Award,
+  Star,
 } from "lucide-react";
 import { RootState, AppDispatch } from "../store";
 import { fetchSwaps } from "../features/swaps/swapsSlice";
@@ -20,6 +29,20 @@ import {
 import { banUser, unbanUser } from "../services/userService";
 import api from "../features/auth/axiosConfig";
 import type { User } from "../types";
+// shadcn/ui imports
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 export const AdminDashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -182,535 +205,366 @@ export const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6">
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">Loading admin dashboard...</div>
-        </div>
+        <Card>
+          <CardContent className="p-12">
+            <div className="text-center">
+              <div className="text-gray-500 mb-4">Loading admin dashboard...</div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Admin Dashboard
-        </h1>
+        <div className="flex items-center space-x-3 mb-2">
+          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+            <Shield size={24} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-black">
+            Admin Dashboard
+          </h1>
+        </div>
         <p className="text-gray-600">
           Manage users, monitor activity, and oversee platform operations
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
-            {[
-              { id: "overview", label: "Overview", icon: BarChart3 },
-              { id: "users", label: "Users", icon: Users },
-              { id: "swaps", label: "Swaps", icon: MessageSquare },
-              { id: "messages", label: "Messages", icon: Send },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <Icon size={16} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview" className="flex items-center space-x-2">
+            <BarChart3 size={16} />
+            <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center space-x-2">
+            <Users size={16} />
+            <span>Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="flex items-center space-x-2">
+            <MessageSquare size={16} />
+            <span>Messages</span>
+          </TabsTrigger>
+          <TabsTrigger value="tools" className="flex items-center space-x-2">
+            <Settings size={16} />
+            <span>Tools</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Overview Tab */}
-      {activeTab === "overview" && (
-        <div className="space-y-6">
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Total Users
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalUsers}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-gray-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-black">{stats.totalUsers}</div>
+                <p className="text-xs text-gray-600">
+                  {stats.activeUsers} active, {stats.bannedUsers} banned
+                </p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Active Users
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.activeUsers}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Total Swaps</CardTitle>
+                <Activity className="h-4 w-4 text-gray-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-black">{stats.totalSwaps}</div>
+                <p className="text-xs text-gray-600">
+                  {stats.pendingSwaps} pending, {stats.completedSwaps} completed
+                </p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <MessageSquare className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Total Swaps
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalSwaps}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Average Rating</CardTitle>
+                <TrendingUp className="h-4 w-4 text-gray-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-black">{stats.averageRating.toFixed(1)}</div>
+                <p className="text-xs text-gray-600">
+                  Across all users
+                </p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Avg Rating
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.averageRating.toFixed(1)}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">Platform Health</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-black">Good</div>
+                <p className="text-xs text-gray-600">
+                  All systems operational
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Recent Activity
-            </h3>
-            <div className="space-y-3">
-              {swaps
-                .filter((swap) => swap)
-                .slice(0, 5)
-                .map((swap) => {
-                  const fromUserId =
-                    typeof swap.fromUserId === "string"
-                      ? swap.fromUserId
-                      : swap.fromUserId?._id;
-                  const toUserId =
-                    typeof swap.toUserId === "string"
-                      ? swap.toUserId
-                      : swap.toUserId?._id;
-                  const fromUser = users.find((u) => u && u._id === fromUserId);
-                  const toUser = users.find((u) => u && u._id === toUserId);
-                  return (
-                    <div
-                      key={swap._id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div>
-                        <span className="font-medium">
-                          {fromUser?.name || "Unknown"}
-                        </span>{" "}
-                        requested to learn{" "}
-                        <span className="font-medium text-blue-600">
-                          {swap.skillWanted}
-                        </span>{" "}
-                        from{" "}
-                        <span className="font-medium">
-                          {toUser?.name || "Unknown"}
-                        </span>
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          swap.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : swap.status === "accepted"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {swap.status}
-                      </span>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Users Tab */}
-      {activeTab === "users" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">
-              User Management
-            </h3>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleRecalculateSwapCounts}
-                disabled={recalculateLoading}
-                className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-400 transition-colors"
-              >
-                <Download size={16} />
-                <span>
-                  {recalculateLoading
-                    ? "Recalculating..."
-                    : "Recalculate Swap Counts"}
-                </span>
-              </button>
-              <button
-                onClick={() => downloadReport("users")}
-                className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                <Download size={16} />
-                <span>Export Users</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Swaps
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rating
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users
-                    .filter((user) => user)
-                    .map((user) => (
-                      <tr key={user._id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                              <Users size={14} className="text-white" />
-                            </div>
-                            <div className="ml-3">
-                              <div className="text-sm font-medium text-gray-900">
-                                {user.name}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {user.location}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.totalSwaps}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.rating.toFixed(1)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.isBanned
-                                ? "bg-red-100 text-red-800"
-                                : "bg-green-100 text-green-800"
-                            }`}
-                          >
-                            {user.isBanned ? "Banned" : "Active"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            className={`px-3 py-1 rounded text-xs transition-colors ${
-                              banLoading === user._id
-                                ? "bg-gray-400 text-white cursor-not-allowed"
-                                : user.isBanned
-                                  ? "bg-green-500 text-white hover:bg-green-600"
-                                  : "bg-red-500 text-white hover:bg-red-600"
-                            }`}
-                            onClick={() => {
-                              handleBanUser(user._id, user.isBanned);
-                            }}
-                            disabled={banLoading === user._id}
-                          >
-                            {banLoading === user._id
-                              ? "Processing..."
-                              : user.isBanned
-                                ? "Unban"
-                                : "Ban"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Swaps Tab */}
-      {activeTab === "swaps" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Swap Management
-            </h3>
-            <button
-              onClick={() => downloadReport("swaps")}
-              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <Download size={16} />
-              <span>Export Swaps</span>
-            </button>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      From
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      To
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Offered
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Wanted
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {swaps
-                    .filter((swap) => swap)
-                    .map((swap) => (
-                      <tr key={swap._id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {typeof swap.fromUserId === "string"
-                            ? "Unknown"
-                            : swap.fromUserId?.name || "Unknown"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {typeof swap.toUserId === "string"
-                            ? "Unknown"
-                            : swap.toUserId?.name || "Unknown"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {swap.skillOffered}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {swap.skillWanted}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              swap.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : swap.status === "accepted"
-                                  ? "bg-green-100 text-green-800"
-                                  : swap.status === "rejected"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {swap.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {new Date(swap.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Messages Tab */}
-      {activeTab === "messages" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Admin Messages
-            </h3>
-            <button
-              onClick={() => setShowMessageModal(true)}
-              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <Send size={16} />
-              <span>Send Message</span>
-            </button>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            {messages.length === 0 ? (
-              <p className="text-gray-600">
-                No messages sent yet. Use the button above to send your first
-                admin message.
-              </p>
-            ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message._id}
-                    className="border border-gray-200 rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">
-                        {message.title}
-                      </h4>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          message.type === "warning"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : message.type === "update"
-                              ? "bg-blue-100 text-blue-800"
-                              : message.type === "maintenance"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {message.type}
-                      </span>
+                {swaps.slice(0, 5).map((swap) => (
+                  <div key={swap._id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="bg-gray-200 text-gray-900 text-xs">
+                        {typeof swap.fromUserId === 'string' ? 'U' : swap.fromUserId?.name?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        New swap request: {swap.skillOffered} ↔ {swap.skillWanted}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {new Date(swap.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
-                    <p className="text-gray-600 text-sm mb-2">
-                      {message.content}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(message.createdAt).toLocaleDateString()}
-                    </p>
+                    <Badge variant={swap.status === 'pending' ? 'secondary' : 'default'}>
+                      {swap.status}
+                    </Badge>
                   </div>
                 ))}
               </div>
-            )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Swaps</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user._id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="w-8 h-8">
+                            <AvatarFallback className="bg-gray-200 text-gray-900 text-xs">
+                              {user.name?.[0] || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-gray-900">{user.name}</div>
+                            <div className="text-xs text-gray-600">
+                              Joined {new Date(user.joinDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">{user.email}</TableCell>
+                      <TableCell>{user.totalSwaps}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Star size={14} className="text-yellow-500 fill-current" />
+                          <span>{user.rating.toFixed(1)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.isBanned ? (
+                          <Badge variant="destructive" className="flex items-center space-x-1">
+                            <UserX size={12} />
+                            <span>Banned</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="default" className="flex items-center space-x-1">
+                            <UserCheck size={12} />
+                            <span>Active</span>
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant={user.isBanned ? "default" : "destructive"}
+                          onClick={() => handleBanUser(user._id, user.isBanned)}
+                          disabled={banLoading === user._id}
+                        >
+                          {banLoading === user._id ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <span>{user.isBanned ? "Unban" : "Ban"}</span>
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Messages Tab */}
+        <TabsContent value="messages" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-gray-900">Admin Messages</h3>
+            <Dialog open={showMessageModal} onOpenChange={setShowMessageModal}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center space-x-2">
+                  <Send size={16} />
+                  <span>Send Message</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Send Admin Message</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="message-title">Title</Label>
+                    <Input
+                      id="message-title"
+                      value={messageTitle}
+                      onChange={(e) => setMessageTitle(e.target.value)}
+                      placeholder="Message title"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="message-type">Type</Label>
+                    <Select value={messageType} onValueChange={(value: any) => setMessageType(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="info">Info</SelectItem>
+                        <SelectItem value="warning">Warning</SelectItem>
+                        <SelectItem value="update">Update</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="message-content">Content</Label>
+                    <Textarea
+                      id="message-content"
+                      value={messageContent}
+                      onChange={(e) => setMessageContent(e.target.value)}
+                      placeholder="Message content"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowMessageModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSendMessage} disabled={messageLoading || !messageTitle || !messageContent}>
+                    {messageLoading ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    ) : (
+                      <Send size={16} className="mr-2" />
+                    )}
+                    Send Message
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-        </div>
-      )}
 
-      {/* Message Modal */}
-      {showMessageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Send Admin Message
-            </h3>
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div key={message._id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900">{message.title}</h4>
+                      <Badge variant="secondary">{message.type}</Badge>
+                    </div>
+                    <p className="text-gray-600 mb-2">{message.content}</p>
+                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                      <Clock size={12} />
+                      <span>{new Date(message.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Message Type
-                </label>
-                <select
-                  value={messageType}
-                  onChange={(e) =>
-                    setMessageType(
-                      e.target.value as
-                        | "info"
-                        | "warning"
-                        | "update"
-                        | "maintenance",
-                    )
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        {/* Tools Tab */}
+        <TabsContent value="tools" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Download size={20} />
+                  <span>Export Reports</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  onClick={() => downloadReport("users")}
+                  className="w-full justify-start"
                 >
-                  <option value="info">Information</option>
-                  <option value="warning">Warning</option>
-                  <option value="update">Update</option>
-                  <option value="maintenance">Maintenance</option>
-                </select>
-              </div>
+                  <Users size={16} className="mr-2" />
+                  Export Users Report
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => downloadReport("swaps")}
+                  className="w-full justify-start"
+                >
+                  <Activity size={16} className="mr-2" />
+                  Export Swaps Report
+                </Button>
+              </CardContent>
+            </Card>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={messageTitle}
-                  onChange={(e) => setMessageTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Message title"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content
-                </label>
-                <textarea
-                  value={messageContent}
-                  onChange={(e) => setMessageContent(e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Message content"
-                />
-              </div>
-            </div>
-
-            <div className="flex space-x-3 mt-6">
-              <button
-                onClick={handleSendMessage}
-                disabled={!messageTitle || !messageContent || messageLoading}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                {messageLoading ? "Sending..." : "Send Message"}
-              </button>
-              <button
-                onClick={() => setShowMessageModal(false)}
-                disabled={messageLoading}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings size={20} />
+                  <span>System Tools</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  onClick={handleRecalculateSwapCounts}
+                  disabled={recalculateLoading}
+                  className="w-full justify-start"
+                >
+                  {recalculateLoading ? (
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Award size={16} className="mr-2" />
+                  )}
+                  Recalculate Swap Counts
+                </Button>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
