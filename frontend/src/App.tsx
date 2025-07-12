@@ -58,11 +58,13 @@ function App() {
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
 
   // Get current user from Redux
-  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const { user: currentUser, loading: authLoading } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   // Fetch current user on app load if token exists
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token && !currentUser) {
       dispatch(fetchCurrentUser());
     }
@@ -96,7 +98,16 @@ function App() {
     setRequests(
       requests.map((r) =>
         r.id === requestId
-          ? { ...r, status: status as 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled', updatedAt: new Date().toISOString() }
+          ? {
+              ...r,
+              status: status as
+                | "pending"
+                | "accepted"
+                | "rejected"
+                | "completed"
+                | "cancelled",
+              updatedAt: new Date().toISOString(),
+            }
           : r
       )
     );
@@ -179,7 +190,11 @@ function App() {
           <Route
             path="/"
             element={
-              currentUser ? (
+              authLoading ? (
+                <div className="flex justify-center items-center h-40 text-lg">
+                  Loading...
+                </div>
+              ) : currentUser ? (
                 <SkillBrowser
                   users={users}
                   currentUser={currentUser}
@@ -194,7 +209,11 @@ function App() {
           <Route
             path="/profile"
             element={
-              currentUser ? (
+              authLoading ? (
+                <div className="flex justify-center items-center h-40 text-lg">
+                  Loading...
+                </div>
+              ) : currentUser ? (
                 <UserProfile
                   user={currentUser}
                   onUpdateUser={handleUpdateUser}
@@ -209,7 +228,11 @@ function App() {
           <Route
             path="/profile/:userId"
             element={
-              currentUser ? (
+              authLoading ? (
+                <div className="flex justify-center items-center h-40 text-lg">
+                  Loading...
+                </div>
+              ) : currentUser ? (
                 <UserProfileWrapper
                   users={users}
                   currentUser={currentUser}
@@ -224,15 +247,12 @@ function App() {
           <Route
             path="/swaps"
             element={
-              currentUser ? (
-                <SwapRequests
-                  requests={requests}
-                  users={users}
-                  currentUser={currentUser}
-                  onUpdateRequest={handleUpdateRequest}
-                  onDeleteRequest={handleDeleteRequest}
-                  onSubmitFeedback={handleSubmitFeedback}
-                />
+              authLoading ? (
+                <div className="flex justify-center items-center h-40 text-lg">
+                  Loading...
+                </div>
+              ) : currentUser ? (
+                <SwapRequests users={users} currentUser={currentUser} />
               ) : (
                 <Navigate to="/auth/login" replace />
               )
@@ -242,7 +262,11 @@ function App() {
           <Route
             path="/admin"
             element={
-              currentUser && currentUser.isAdmin ? (
+              authLoading ? (
+                <div className="flex justify-center items-center h-40 text-lg">
+                  Loading...
+                </div>
+              ) : currentUser && currentUser.isAdmin ? (
                 <AdminDashboard
                   users={users}
                   requests={requests}

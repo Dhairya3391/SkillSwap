@@ -1,7 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { User } from "../../types";
 import api from "./axiosConfig";
-import { getCurrentUser, updateUser as updateUserApi, getUserById, UpdateUserData } from "../../services/userService";
+import {
+  getCurrentUser,
+  updateUser as updateUserApi,
+  getUserById,
+  UpdateUserData,
+} from "../../services/userService";
 
 interface ApiError {
   response?: {
@@ -19,8 +24,8 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: null,
-  token: null,
+  user: JSON.parse(localStorage.getItem("user") || "null"),
+  token: localStorage.getItem("token"),
   loading: false,
   error: null,
 };
@@ -76,7 +81,9 @@ export const fetchCurrentUser = createAsyncThunk(
       return user;
     } catch (err: unknown) {
       const error = err as ApiError;
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch user");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch user"
+      );
     }
   }
 );
@@ -93,7 +100,9 @@ export const updateUserProfile = createAsyncThunk(
       return updatedUser;
     } catch (err: unknown) {
       const error = err as ApiError;
-      return rejectWithValue(error.response?.data?.message || "Failed to update user");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update user"
+      );
     }
   }
 );
@@ -107,7 +116,9 @@ export const fetchUserById = createAsyncThunk(
       return user;
     } catch (err: unknown) {
       const error = err as ApiError;
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch user");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch user"
+      );
     }
   }
 );
