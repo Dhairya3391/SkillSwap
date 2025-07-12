@@ -1,4 +1,4 @@
-import { Login } from "./login.tsx";
-import { Register } from "./register.tsx";
+import { Login } from "./Login.tsx";
+import { Register } from "./Register.tsx";
 
 export { Login, Register };
