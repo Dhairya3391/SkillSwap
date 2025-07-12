@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  User,
   MapPin,
   Calendar,
   Star,
@@ -11,14 +10,21 @@ import {
   Loader2,
   Award,
   Clock,
-  Eye,
-  EyeOff,
   Sparkles,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store";
 import { updateUserProfile } from "../features/auth/authSlice";
 import type { User as UserType } from "../types";
+// shadcn/ui imports
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 interface UserProfileProps {
   user: UserType;
@@ -46,7 +52,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
   const handleSave = async () => {
     try {
-      const userId = user._id || user.id;
+      const userId = user._id;
       if (!userId) {
         console.error("No user ID found");
         return;
@@ -102,367 +108,241 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-silver_lake_blue-200">
-          <div className="flex items-center justify-center py-16">
+        <Card>
+          <CardContent className="p-16">
             <div className="text-center">
-              <Loader2 className="animate-spin h-12 w-12 text-yinmn_blue-500 mx-auto mb-4" />
-              <span className="text-lg text-silver_lake_blue-600">Loading profile...</span>
+              <Loader2 className="animate-spin h-12 w-12 text-gray-500 mx-auto mb-4" />
+              <span className="text-lg text-gray-600">Loading profile...</span>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 animate-fade-in">
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-silver_lake_blue-200">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <Card>
         {/* Error Message */}
         {error && (
-          <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 text-red-700 px-6 py-4 rounded-t-2xl">
-            <div className="flex items-center space-x-2">
-              <X size={20} />
-              <span className="font-medium">{error}</span>
-            </div>
-          </div>
+          <Alert variant="destructive" className="rounded-t-lg rounded-b-none">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-yinmn_blue-500 via-oxford_blue-600 to-rich_black-600 px-6 sm:px-8 py-8 sm:py-12 text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-          <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                <div className="relative">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-xl">
-                    <User size={32} className="sm:w-10 sm:h-10" />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-green-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                </div>
-                <div className="text-center sm:text-left">
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">{user.name}</h1>
-                  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 text-white/90">
-                    {user.location && (
-                      <div className="flex items-center space-x-2">
-                        <MapPin size={16} />
-                        <span>{user.location}</span>
-                      </div>
-                    )}
+        <CardHeader className="bg-black text-white pb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+              <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
+                <AvatarFallback className="bg-gray-100 text-gray-900 text-2xl">
+                  {user.name?.[0] || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center sm:text-left">
+                <CardTitle className="text-2xl sm:text-3xl lg:text-4xl mb-2 text-white">
+                  {user.name}
+                </CardTitle>
+                <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 text-gray-300">
+                  {user.location && (
                     <div className="flex items-center space-x-2">
-                      <Calendar size={16} />
-                      <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
+                      <MapPin size={16} />
+                      <span>{user.location}</span>
                     </div>
+                  )}
+                  <div className="flex items-center space-x-2">
+                    <Calendar size={16} />
+                    <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
-              {isOwnProfile && (
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  <Edit2 size={20} />
-                </button>
-              )}
             </div>
+            {isOwnProfile && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsEditing(!isEditing)}
+                className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+              >
+                <Edit2 size={20} />
+              </Button>
+            )}
           </div>
-        </div>
+        </CardHeader>
 
         {/* Stats */}
-        <div className="px-6 sm:px-8 py-6 border-b border-silver_lake_blue-200 bg-gradient-to-r from-platinum-100 to-silver_lake_blue-50">
+        <CardContent className="p-6 border-b border-gray-200 bg-gray-50">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="text-center bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md">
+            <div className="text-center bg-white rounded-lg p-4 shadow-sm">
               <div className="flex items-center justify-center space-x-2 mb-2">
-                <Award className="text-yinmn_blue-600" size={24} />
-                <span className="text-2xl sm:text-3xl font-bold text-rich_black-700">
+                <Award className="text-gray-600" size={24} />
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                   {user.totalSwaps}
                 </span>
               </div>
-              <div className="text-sm font-medium text-silver_lake_blue-600">Swaps Completed</div>
+              <div className="text-sm font-medium text-gray-600">Swaps Completed</div>
             </div>
-            <div className="text-center bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md">
+            <div className="text-center bg-white rounded-lg p-4 shadow-sm">
               <div className="flex items-center justify-center space-x-2 mb-2">
                 <Star size={24} className="text-yellow-500 fill-current" />
-                <span className="text-2xl sm:text-3xl font-bold text-rich_black-700">
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                   {user.rating.toFixed(1)}
                 </span>
               </div>
-              <div className="text-sm font-medium text-silver_lake_blue-600">Average Rating</div>
+              <div className="text-sm font-medium text-gray-600">Average Rating</div>
             </div>
-            <div className="text-center bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md">
+            <div className="text-center bg-white rounded-lg p-4 shadow-sm">
               <div className="flex items-center justify-center space-x-2 mb-2">
-                <Sparkles className="text-purple-600" size={24} />
-                <span className="text-2xl sm:text-3xl font-bold text-rich_black-700">
+                <Sparkles className="text-gray-600" size={24} />
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                   {user.skillsOffered.length}
                 </span>
               </div>
-              <div className="text-sm font-medium text-silver_lake_blue-600">Skills Offered</div>
+              <div className="text-sm font-medium text-gray-600">Skills Offered</div>
             </div>
           </div>
-        </div>
+        </CardContent>
 
         {/* Profile Content */}
-        <div className="p-6 sm:p-8 space-y-8">
-          {/* Basic Info */}
-          {isEditing && isOwnProfile ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-rich_black-700 mb-3">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={editedUser.name}
-                    onChange={(e) =>
-                      setEditedUser({ ...editedUser, name: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-silver_lake_blue-300 rounded-xl focus:ring-2 focus:ring-yinmn_blue-500 focus:border-yinmn_blue-500 bg-white text-rich_black-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-rich_black-700 mb-3">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={editedUser.location || ""}
-                    onChange={(e) =>
-                      setEditedUser({ ...editedUser, location: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-silver_lake_blue-300 rounded-xl focus:ring-2 focus:ring-yinmn_blue-500 focus:border-yinmn_blue-500 bg-white text-rich_black-700"
-                    placeholder="Enter your location"
-                  />
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-yinmn_blue-50 to-oxford_blue-50 rounded-xl p-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={editedUser.isPublic}
-                    onChange={(e) =>
-                      setEditedUser({
-                        ...editedUser,
-                        isPublic: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5 rounded border-silver_lake_blue-300 text-yinmn_blue-600 focus:ring-yinmn_blue-500"
-                  />
-                  <div className="flex items-center space-x-2">
-                    {editedUser.isPublic ? (
-                      <Eye size={20} className="text-green-600" />
-                    ) : (
-                      <EyeOff size={20} className="text-silver_lake_blue-600" />
-                    )}
-                    <span className="text-sm font-semibold text-rich_black-700">
-                      Make profile public
-                    </span>
-                  </div>
-                </label>
-                <p className="text-xs text-silver_lake_blue-600 mt-2 ml-8">
-                  Public profiles can be discovered by other users
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between bg-gradient-to-r from-platinum-100 to-silver_lake_blue-50 rounded-xl p-4">
-              <div className="flex items-center space-x-3">
-                {user.isPublic ? (
-                  <Eye className="text-green-600" size={20} />
-                ) : (
-                  <EyeOff className="text-silver_lake_blue-600" size={20} />
-                )}
-                <span
-                  className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-                    user.isPublic
-                      ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800"
-                      : "bg-gradient-to-r from-silver_lake_blue-100 to-silver_lake_blue-200 text-silver_lake_blue-800"
-                  }`}
-                >
-                  {user.isPublic ? "Public Profile" : "Private Profile"}
-                </span>
-              </div>
-            </div>
-          )}
-
+        <CardContent className="p-6 space-y-6">
           {/* Skills Offered */}
-          <div className="bg-gradient-to-r from-yinmn_blue-50 to-oxford_blue-50 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-rich_black-700 mb-6 flex items-center space-x-2">
-              <Sparkles className="text-yinmn_blue-600" size={24} />
-              <span>Skills I Offer</span>
-            </h3>
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-3">
-                {(isEditing ? editedUser : user).skillsOffered.map(
-                  (skill: string, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center bg-gradient-to-r from-yinmn_blue-100 to-oxford_blue-100 text-yinmn_blue-700 px-4 py-2 rounded-xl text-sm font-medium shadow-sm"
-                    >
-                      <span>{skill}</span>
-                      {isEditing && isOwnProfile && (
-                        <button
-                          onClick={() => removeSkill("offered", index)}
-                          className="ml-3 text-yinmn_blue-500 hover:text-yinmn_blue-700 transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      )}
-                    </div>
-                  ),
-                )}
-              </div>
-              {isEditing && isOwnProfile && (
-                <div className="flex space-x-3">
-                  <input
-                    type="text"
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Skills Offered</h3>
+              {isOwnProfile && isEditing && (
+                <div className="flex items-center space-x-2">
+                  <Input
                     value={newSkillOffered}
                     onChange={(e) => setNewSkillOffered(e.target.value)}
-                    placeholder="Add a skill you offer"
-                    className="flex-1 px-4 py-3 border border-silver_lake_blue-300 rounded-xl focus:ring-2 focus:ring-yinmn_blue-500 focus:border-yinmn_blue-500 bg-white text-rich_black-700"
-                    onKeyPress={(e) => e.key === "Enter" && addSkill("offered")}
+                    placeholder="Add a skill"
+                    className="w-48"
+                    onKeyPress={(e) => e.key === 'Enter' && addSkill('offered')}
                   />
-                  <button
-                    onClick={() => addSkill("offered")}
-                    className="bg-gradient-to-r from-yinmn_blue-500 to-oxford_blue-600 text-white px-6 py-3 rounded-xl hover:from-yinmn_blue-600 hover:to-oxford_blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    <Plus size={20} />
-                  </button>
+                  <Button size="sm" onClick={() => addSkill('offered')}>
+                    <Plus size={16} />
+                  </Button>
                 </div>
               )}
             </div>
+            <div className="flex flex-wrap gap-2">
+              {editedUser.skillsOffered.map((skill, index) => (
+                <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-900">
+                  {skill}
+                  {isOwnProfile && isEditing && (
+                    <button
+                      onClick={() => removeSkill('offered', index)}
+                      className="ml-2 hover:text-red-600"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </Badge>
+              ))}
+            </div>
           </div>
+
+          <Separator />
 
           {/* Skills Wanted */}
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-rich_black-700 mb-6 flex items-center space-x-2">
-              <Star className="text-purple-600" size={24} />
-              <span>Skills I Want to Learn</span>
-            </h3>
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-3">
-                {(isEditing ? editedUser : user).skillsWanted.map(
-                  (skill: string, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-4 py-2 rounded-xl text-sm font-medium shadow-sm"
-                    >
-                      <span>{skill}</span>
-                      {isEditing && isOwnProfile && (
-                        <button
-                          onClick={() => removeSkill("wanted", index)}
-                          className="ml-3 text-purple-500 hover:text-purple-700 transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      )}
-                    </div>
-                  ),
-                )}
-              </div>
-              {isEditing && isOwnProfile && (
-                <div className="flex space-x-3">
-                  <input
-                    type="text"
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Skills Wanted</h3>
+              {isOwnProfile && isEditing && (
+                <div className="flex items-center space-x-2">
+                  <Input
                     value={newSkillWanted}
                     onChange={(e) => setNewSkillWanted(e.target.value)}
-                    placeholder="Add a skill you want to learn"
-                    className="flex-1 px-4 py-3 border border-silver_lake_blue-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-rich_black-700"
-                    onKeyPress={(e) => e.key === "Enter" && addSkill("wanted")}
+                    placeholder="Add a skill"
+                    className="w-48"
+                    onKeyPress={(e) => e.key === 'Enter' && addSkill('wanted')}
                   />
-                  <button
-                    onClick={() => addSkill("wanted")}
-                    className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    <Plus size={20} />
-                  </button>
+                  <Button size="sm" onClick={() => addSkill('wanted')}>
+                    <Plus size={16} />
+                  </Button>
                 </div>
               )}
             </div>
+            <div className="flex flex-wrap gap-2">
+              {editedUser.skillsWanted.map((skill, index) => (
+                <Badge key={index} variant="outline" className="text-gray-700">
+                  {skill}
+                  {isOwnProfile && isEditing && (
+                    <button
+                      onClick={() => removeSkill('wanted', index)}
+                      className="ml-2 hover:text-red-600"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </Badge>
+              ))}
+            </div>
           </div>
 
+          <Separator />
+
           {/* Availability */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-rich_black-700 mb-6 flex items-center space-x-2">
-              <Clock className="text-green-600" size={24} />
-              <span>Availability</span>
-            </h3>
-            {isEditing && isOwnProfile ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {availabilityOptions.map((option) => (
-                  <label key={option} className="flex items-center space-x-3 bg-white/80 rounded-lg p-3 cursor-pointer hover:bg-white transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={editedUser.availability.includes(option)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Availability</h3>
+            <div className="flex flex-wrap gap-2">
+              {editedUser.availability.map((time, index) => (
+                <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                  <Clock size={12} className="mr-1" />
+                  {time}
+                </Badge>
+              ))}
+            </div>
+            {isOwnProfile && isEditing && (
+              <div className="mt-4">
+                <Label className="text-sm font-medium text-gray-700">Add availability:</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {availabilityOptions.map((option) => (
+                    <Button
+                      key={option}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (!editedUser.availability.includes(option)) {
                           setEditedUser({
                             ...editedUser,
                             availability: [...editedUser.availability, option],
                           });
-                        } else {
-                          setEditedUser({
-                            ...editedUser,
-                            availability: editedUser.availability.filter(
-                              (a: string) => a !== option,
-                            ),
-                          });
                         }
                       }}
-                      className="w-4 h-4 rounded border-silver_lake_blue-300 text-green-600 focus:ring-green-500"
-                    />
-                    <span className="text-sm font-medium text-rich_black-700">{option}</span>
-                  </label>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-3">
-                {user.availability.map((time: string, index: number) => (
-                  <span
-                    key={index}
-                    className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-4 py-2 rounded-xl text-sm font-medium shadow-sm"
-                  >
-                    {time}
-                  </span>
-                ))}
-                {user.availability.length === 0 && (
-                  <span className="text-silver_lake_blue-600 italic">No availability set</span>
-                )}
+                      disabled={editedUser.availability.includes(option)}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
           {/* Edit Actions */}
-          {isEditing && isOwnProfile && (
-            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-silver_lake_blue-200">
-              <button
-                onClick={handleSave}
-                disabled={loading}
-                className="flex items-center justify-center space-x-2 bg-gradient-to-r from-yinmn_blue-500 to-oxford_blue-600 text-white px-6 py-3 rounded-xl hover:from-yinmn_blue-600 hover:to-oxford_blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-medium"
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin h-5 w-5" />
-                ) : (
-                  <Save size={20} />
-                )}
-                <span>{loading ? "Saving..." : "Save Changes"}</span>
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditedUser(user);
-                }}
-                disabled={loading}
-                className="flex items-center justify-center space-x-2 bg-gradient-to-r from-silver_lake_blue-400 to-silver_lake_blue-500 text-white px-6 py-3 rounded-xl hover:from-silver_lake_blue-500 hover:to-silver_lake_blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-medium"
-              >
-                <X size={20} />
-                <span>Cancel</span>
-              </button>
+          {isOwnProfile && (
+            <div className="flex justify-end space-x-2 pt-4">
+              {isEditing ? (
+                <>
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave} disabled={loading}>
+                    {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Save className="mr-2" size={16} />}
+                    Save Changes
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setIsEditing(true)}>
+                  <Edit2 className="mr-2" size={16} />
+                  Edit Profile
+                </Button>
+              )}
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -56,9 +56,9 @@ const UserProfileWrapper: React.FC<{
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin h-8 w-8 text-blue-500 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-8 w-8 text-gray-500 border-2 border-gray-300 border-t-black rounded-full"></div>
             <span className="ml-2 text-gray-600">Loading profile...</span>
           </div>
         </div>
@@ -69,7 +69,7 @@ const UserProfileWrapper: React.FC<{
   if (error || !targetUser) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="text-red-500 text-lg mb-2">Error</div>
@@ -125,7 +125,7 @@ function App() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-platinum-900 via-platinum-800 to-silver_lake_blue-900">
+    <div className="min-h-screen bg-gray-50">
       <Header currentUser={currentUser} notifications={notifications} />
 
       <main className="py-4 sm:py-8">
@@ -137,7 +137,7 @@ function App() {
             path="/"
             element={
               authLoading ? (
-                <div className="flex justify-center items-center h-40 text-lg">
+                <div className="flex justify-center items-center h-40 text-lg text-gray-600">
                   Loading...
                 </div>
               ) : currentUser ? (
@@ -163,7 +163,7 @@ function App() {
             path="/profile"
             element={
               authLoading ? (
-                <div className="flex justify-center items-center h-40 text-lg">
+                <div className="flex justify-center items-center h-40 text-lg text-gray-600">
                   Loading...
                 </div>
               ) : currentUser ? (
@@ -178,7 +178,7 @@ function App() {
             path="/profile/:userId"
             element={
               authLoading ? (
-                <div className="flex justify-center items-center h-40 text-lg">
+                <div className="flex justify-center items-center h-40 text-lg text-gray-600">
                   Loading...
                 </div>
               ) : currentUser ? (
@@ -203,7 +203,7 @@ function App() {
           <Route
             path="/admin"
             element={
-              currentUser && currentUser.isAdmin ? (
+              currentUser?.isAdmin ? (
                 <AdminDashboard />
               ) : (
                 <Navigate to="/" replace />
