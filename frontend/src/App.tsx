@@ -125,10 +125,10 @@ function App() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-platinum-900 via-platinum-800 to-silver_lake_blue-900">
       <Header currentUser={currentUser} notifications={notifications} />
 
-      <main className="py-8">
+      <main className="py-4 sm:py-8">
         <Routes>
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
