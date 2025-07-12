@@ -11,13 +11,21 @@ import {
 } from "lucide-react";
 import { RootState, AppDispatch } from "../store";
 import { fetchSwaps } from "../features/swaps/swapsSlice";
-import { getAllUsers } from "../services/userService";
+import {
+  getAllUsersAdmin,
+  createAdminMessage,
+  getAdminMessages,
+  type AdminMessage,
+} from "../services/adminService";
+import { banUser, unbanUser } from "../services/userService";
+import api from "../features/auth/axiosConfig";
 import type { User } from "../types";
 
 export const AdminDashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { swaps } = useSelector((state: RootState) => state.swaps);
   const [users, setUsers] = useState<User[]>([]);
+  const [messages, setMessages] = useState<AdminMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -26,13 +34,34 @@ export const AdminDashboard: React.FC = () => {
   const [messageType, setMessageType] = useState<
     "info" | "warning" | "update" | "maintenance"
   >("info");
+  const [banLoading, setBanLoading] = useState<string | null>(null);
+  const [messageLoading, setMessageLoading] = useState(false);
+  const [recalculateLoading, setRecalculateLoading] = useState(false);
+
+  const fetchUsers = async () => {
+    try {
+      const fetchedUsers = await getAllUsersAdmin();
+      setUsers(fetchedUsers);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const fetchedMessages = await getAdminMessages();
+      setMessages(fetchedMessages);
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         dispatch(fetchSwaps());
-        const fetchedUsers = await getAllUsers();
-        setUsers(fetchedUsers);
+        await fetchUsers();
+        await fetchMessages();
       } catch (error) {
         console.error("Failed to fetch admin data:", error);
       } finally {
@@ -42,31 +71,75 @@ export const AdminDashboard: React.FC = () => {
     fetchData();
   }, [dispatch]);
 
+  const handleBanUser = async (userId: string, isCurrentlyBanned: boolean) => {
+    setBanLoading(userId);
+    try {
+      if (isCurrentlyBanned) {
+        await unbanUser(userId);
+      } else {
+        await banUser(userId);
+      }
+      // Refresh the users list to get updated data
+      await fetchUsers();
+    } catch (error) {
+      console.error(
+        `Failed to ${isCurrentlyBanned ? "unban" : "ban"} user:`,
+        error,
+      );
+    } finally {
+      setBanLoading(null);
+    }
+  };
+
+  const handleRecalculateSwapCounts = async () => {
+    setRecalculateLoading(true);
+    try {
+      await api.post("/admin/recalculate-swap-counts");
+      await fetchUsers(); // Refresh users to show updated counts
+      console.log("Swap counts recalculated successfully");
+    } catch (error) {
+      console.error("Failed to recalculate swap counts:", error);
+    } finally {
+      setRecalculateLoading(false);
+    }
+  };
+
   const stats = {
     totalUsers: users.length,
-    activeUsers: users.filter((u) => !u.isBanned).length,
-    bannedUsers: users.filter((u) => u.isBanned).length,
+    activeUsers: users.filter((u) => u && !u.isBanned).length,
+    bannedUsers: users.filter((u) => u && u.isBanned).length,
     totalSwaps: swaps.length,
-    pendingSwaps: swaps.filter((r) => r.status === "pending").length,
-    completedSwaps: swaps.filter((r) => r.status === "completed").length,
+    pendingSwaps: swaps.filter((r) => r && r.status === "pending").length,
+    completedSwaps: swaps.filter((r) => r && r.status === "completed").length,
     averageRating:
       users.length > 0
-        ? users.reduce((sum, u) => sum + u.rating, 0) / users.length
+        ? users.filter((u) => u).reduce((sum, u) => sum + (u.rating || 0), 0) /
+          users.filter((u) => u).length
         : 0,
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (messageTitle && messageContent) {
-      // TODO: Implement admin message sending
-      console.log("Sending admin message:", {
-        messageTitle,
-        messageContent,
-        messageType,
-      });
-      setShowMessageModal(false);
-      setMessageTitle("");
-      setMessageContent("");
-      setMessageType("info");
+      setMessageLoading(true);
+      try {
+        await createAdminMessage({
+          title: messageTitle,
+          content: messageContent,
+          type: messageType,
+        });
+        setShowMessageModal(false);
+        setMessageTitle("");
+        setMessageContent("");
+        setMessageType("info");
+        // Refresh messages list
+        await fetchMessages();
+        // You could add a success notification here
+      } catch (error) {
+        console.error("Failed to send admin message:", error);
+        // You could add an error notification here
+      } finally {
+        setMessageLoading(false);
+      }
     }
   };
 
@@ -233,43 +306,52 @@ export const AdminDashboard: React.FC = () => {
               Recent Activity
             </h3>
             <div className="space-y-3">
-              {swaps.slice(0, 5).map((swap) => {
-                const fromUserId = typeof swap.fromUserId === 'string' ? swap.fromUserId : swap.fromUserId._id;
-                const toUserId = typeof swap.toUserId === 'string' ? swap.toUserId : swap.toUserId._id;
-                const fromUser = users.find((u) => u._id === fromUserId);
-                const toUser = users.find((u) => u._id === toUserId);
-                return (
-                  <div
-                    key={swap._id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <span className="font-medium">
-                        {fromUser?.name || "Unknown"}
-                      </span>{" "}
-                      requested to learn{" "}
-                      <span className="font-medium text-blue-600">
-                        {swap.skillWanted}
-                      </span>{" "}
-                      from{" "}
-                      <span className="font-medium">
-                        {toUser?.name || "Unknown"}
+              {swaps
+                .filter((swap) => swap)
+                .slice(0, 5)
+                .map((swap) => {
+                  const fromUserId =
+                    typeof swap.fromUserId === "string"
+                      ? swap.fromUserId
+                      : swap.fromUserId?._id;
+                  const toUserId =
+                    typeof swap.toUserId === "string"
+                      ? swap.toUserId
+                      : swap.toUserId?._id;
+                  const fromUser = users.find((u) => u && u._id === fromUserId);
+                  const toUser = users.find((u) => u && u._id === toUserId);
+                  return (
+                    <div
+                      key={swap._id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <span className="font-medium">
+                          {fromUser?.name || "Unknown"}
+                        </span>{" "}
+                        requested to learn{" "}
+                        <span className="font-medium text-blue-600">
+                          {swap.skillWanted}
+                        </span>{" "}
+                        from{" "}
+                        <span className="font-medium">
+                          {toUser?.name || "Unknown"}
+                        </span>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          swap.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : swap.status === "accepted"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {swap.status}
                       </span>
                     </div>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        swap.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : swap.status === "accepted"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {swap.status}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -282,13 +364,27 @@ export const AdminDashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900">
               User Management
             </h3>
-            <button
-              onClick={() => downloadReport("users")}
-              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <Download size={16} />
-              <span>Export Users</span>
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleRecalculateSwapCounts}
+                disabled={recalculateLoading}
+                className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-400 transition-colors"
+              >
+                <Download size={16} />
+                <span>
+                  {recalculateLoading
+                    ? "Recalculating..."
+                    : "Recalculate Swap Counts"}
+                </span>
+              </button>
+              <button
+                onClick={() => downloadReport("users")}
+                className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <Download size={16} />
+                <span>Export Users</span>
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -317,63 +413,68 @@ export const AdminDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user._id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                            <Users size={14} className="text-white" />
-                          </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900">
-                              {user.name}
+                  {users
+                    .filter((user) => user)
+                    .map((user) => (
+                      <tr key={user._id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                              <Users size={14} className="text-white" />
                             </div>
-                            <div className="text-sm text-gray-500">
-                              {user.location}
+                            <div className="ml-3">
+                              <div className="text-sm font-medium text-gray-900">
+                                {user.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {user.location}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.totalSwaps}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.rating.toFixed(1)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            user.isBanned
-                              ? "bg-red-100 text-red-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {user.isBanned ? "Banned" : "Active"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          className={`px-3 py-1 rounded text-xs ${
-                            user.isBanned
-                              ? "bg-green-500 text-white hover:bg-green-600"
-                              : "bg-red-500 text-white hover:bg-red-600"
-                          }`}
-                          onClick={() => {
-                            // TODO: Implement ban/unban functionality
-                            console.log(
-                              `${user.isBanned ? "Unban" : "Ban"} user:`,
-                              user._id,
-                            );
-                          }}
-                        >
-                          {user.isBanned ? "Unban" : "Ban"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {user.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {user.totalSwaps}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {user.rating.toFixed(1)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              user.isBanned
+                                ? "bg-red-100 text-red-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {user.isBanned ? "Banned" : "Active"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            className={`px-3 py-1 rounded text-xs transition-colors ${
+                              banLoading === user._id
+                                ? "bg-gray-400 text-white cursor-not-allowed"
+                                : user.isBanned
+                                  ? "bg-green-500 text-white hover:bg-green-600"
+                                  : "bg-red-500 text-white hover:bg-red-600"
+                            }`}
+                            onClick={() => {
+                              handleBanUser(user._id, user.isBanned);
+                            }}
+                            disabled={banLoading === user._id}
+                          >
+                            {banLoading === user._id
+                              ? "Processing..."
+                              : user.isBanned
+                                ? "Unban"
+                                : "Ban"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -423,40 +524,46 @@ export const AdminDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {swaps.map((swap) => (
-                    <tr key={swap._id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {typeof swap.fromUserId === 'string' ? 'Unknown' : swap.fromUserId?.name || "Unknown"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {typeof swap.toUserId === 'string' ? 'Unknown' : swap.toUserId?.name || "Unknown"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {swap.skillOffered}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {swap.skillWanted}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            swap.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : swap.status === "accepted"
-                                ? "bg-green-100 text-green-800"
-                                : swap.status === "rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {swap.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(swap.createdAt).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
+                  {swaps
+                    .filter((swap) => swap)
+                    .map((swap) => (
+                      <tr key={swap._id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {typeof swap.fromUserId === "string"
+                            ? "Unknown"
+                            : swap.fromUserId?.name || "Unknown"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {typeof swap.toUserId === "string"
+                            ? "Unknown"
+                            : swap.toUserId?.name || "Unknown"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {swap.skillOffered}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {swap.skillWanted}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              swap.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : swap.status === "accepted"
+                                  ? "bg-green-100 text-green-800"
+                                  : swap.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {swap.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(swap.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -481,10 +588,46 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <p className="text-gray-600">
-              No messages sent yet. Use the button above to send your first
-              admin message.
-            </p>
+            {messages.length === 0 ? (
+              <p className="text-gray-600">
+                No messages sent yet. Use the button above to send your first
+                admin message.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message._id}
+                    className="border border-gray-200 rounded-lg p-4"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">
+                        {message.title}
+                      </h4>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          message.type === "warning"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : message.type === "update"
+                              ? "bg-blue-100 text-blue-800"
+                              : message.type === "maintenance"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {message.type}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-2">
+                      {message.content}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(message.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -552,14 +695,15 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={handleSendMessage}
-                disabled={!messageTitle || !messageContent}
+                disabled={!messageTitle || !messageContent || messageLoading}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                Send Message
+                {messageLoading ? "Sending..." : "Send Message"}
               </button>
               <button
                 onClick={() => setShowMessageModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={messageLoading}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
               >
                 Cancel
               </button>

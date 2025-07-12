@@ -18,9 +18,15 @@ export const Login = () => {
 
   useEffect(() => {
     if (user && token && !hasLoggedIn.current) {
-      toast.success("Login successful!");
       hasLoggedIn.current = true;
-      navigate("/");
+      // Redirect admin users to admin dashboard, regular users to home
+      if (user.isAdmin) {
+        toast.success("Login successful! Welcome to Admin Dashboard.");
+        navigate("/admin");
+      } else {
+        toast.success("Login successful!");
+        navigate("/");
+      }
     }
   }, [user, token, navigate]);
 

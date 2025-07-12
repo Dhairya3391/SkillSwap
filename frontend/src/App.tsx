@@ -43,8 +43,8 @@ const UserProfileWrapper: React.FC<{
         setTargetUser(userData);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch user:', err);
-        setError('Failed to load user profile');
+        console.error("Failed to fetch user:", err);
+        setError("Failed to load user profile");
       } finally {
         setLoading(false);
       }
@@ -73,7 +73,7 @@ const UserProfileWrapper: React.FC<{
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="text-red-500 text-lg mb-2">Error</div>
-              <div className="text-gray-600">{error || 'User not found'}</div>
+              <div className="text-gray-600">{error || "User not found"}</div>
             </div>
           </div>
         </div>
@@ -105,6 +105,7 @@ function App() {
   const swaps = useSelector((state: RootState) => state.swaps.swaps);
   const notifications = currentUser
     ? swaps.filter((swap) => {
+        if (!swap || !swap.toUserId) return false;
         const toUserId =
           typeof swap.toUserId === "string" ? swap.toUserId : swap.toUserId._id;
         return toUserId === currentUser._id && swap.status === "pending";
@@ -128,7 +129,11 @@ function App() {
                   Loading...
                 </div>
               ) : currentUser ? (
-                <SkillBrowser currentUser={currentUser} />
+                currentUser.isAdmin ? (
+                  <Navigate to="/admin" replace />
+                ) : (
+                  <SkillBrowser currentUser={currentUser} />
+                )
               ) : (
                 <Navigate to="/auth/login" replace />
               )

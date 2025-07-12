@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   createSwap,
@@ -7,18 +7,18 @@ const {
   updateSwapStatus,
   deleteSwap,
   getSentSwaps,
-  getReceivedSwaps
-} = require('../controllers/swapController');
-const { protect } = require('../middleware/authMiddleware');
+  getReceivedSwaps,
+} = require("../controllers/swapController");
+const { protect } = require("../middleware/authMiddleware");
 
 router.use(protect);
 
-router.post('/', createSwap);
-router.get('/', getAllSwaps);
-router.get('/sent', getSentSwaps);
-router.get('/received', getReceivedSwaps);
-router.get('/:id', getSwapById);
-router.put('/:id', updateSwapStatus);
-router.delete('/:id', deleteSwap);
+router.post("/", createSwap);
+router.get("/", getAllSwaps);
+router.get("/sent", getSentSwaps);
+router.get("/received", getReceivedSwaps);
+router.get("/:id", getSwapById);
+router.put("/:id", updateSwapStatus);
+router.delete("/:id", deleteSwap);
 
 module.exports = router;

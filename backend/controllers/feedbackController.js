@@ -7,8 +7,8 @@ exports.getFeedback = async (req, res) => {
   if (req.query.toUserId) filter.toUserId = req.query.toUserId;
 
   const feedbacks = await Feedback.find(filter)
-    .populate('fromUserId', 'name')
-    .populate('toUserId', 'name');
+    .populate("fromUserId", "name")
+    .populate("toUserId", "name");
   res.json(feedbacks);
 };
 
@@ -22,7 +22,7 @@ exports.submitFeedback = async (req, res) => {
       fromUserId: req.user._id,
       toUserId,
       rating,
-      comment
+      comment,
     });
 
     await feedback.save();
@@ -34,16 +34,17 @@ exports.submitFeedback = async (req, res) => {
 
 // GET /api/feedback/user/:userId - Feedback received by user
 exports.getUserFeedback = async (req, res) => {
-  const feedbacks = await Feedback.find({ toUserId: req.params.userId })
-    .populate('fromUserId', 'name');
+  const feedbacks = await Feedback.find({
+    toUserId: req.params.userId,
+  }).populate("fromUserId", "name");
   res.json(feedbacks);
 };
 
 // DELETE /api/feedback/:id - Admin only
 exports.deleteFeedback = async (req, res) => {
-  if (!req.user.isAdmin) return res.status(403).json({ message: 'Forbidden' });
+  if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
 
   const deleted = await Feedback.findByIdAndDelete(req.params.id);
-  if (!deleted) return res.status(404).json({ message: 'Feedback not found' });
-  res.json({ message: 'Feedback deleted' });
+  if (!deleted) return res.status(404).json({ message: "Feedback not found" });
+  res.json({ message: "Feedback deleted" });
 };

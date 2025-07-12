@@ -10,6 +10,7 @@ import {
 
 interface ApiError {
   response?: {
+    status?: number;
     data?: {
       message?: string;
     };
@@ -75,12 +76,22 @@ export const loginUser = createAsyncThunk(
 // Get current user profile
 export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       const user = await getCurrentUser();
       return user;
     } catch (err: unknown) {
       const error = err as ApiError;
+      // If user is banned, logout automatically
+      if (
+        error.response?.status === 403 &&
+        error.response?.data?.message?.includes("banned")
+      ) {
+        dispatch(logout());
+        return rejectWithValue(
+          "Your account has been banned. Please contact support.",
+        );
+      }
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch user",
       );

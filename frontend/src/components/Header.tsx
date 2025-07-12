@@ -86,9 +86,16 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                     <User size={16} className="text-white" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">
-                    {currentUser?.name}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {currentUser?.name}
+                    </span>
+                    {currentUser?.isAdmin && (
+                      <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                        Admin
+                      </span>
+                    )}
+                  </div>
                   <button
                     onClick={handleLogout}
                     className="ml-3 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm text-gray-700"
