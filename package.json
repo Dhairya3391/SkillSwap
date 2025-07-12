@@ -1,0 +1,11 @@
+{
+  "name": "skillswap-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
