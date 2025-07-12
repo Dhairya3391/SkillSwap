@@ -1,24 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from '../../features/auth/authSlice';
-import { RootState, AppDispatch } from '../../store';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../../features/auth/authSlice";
+import { RootState, AppDispatch } from "../../store";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { user, loading, error, token } = useSelector((state: RootState) => state.auth);
+  const { user, loading, error, token } = useSelector(
+    (state: RootState) => state.auth,
+  );
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const hasLoggedIn = useRef(false);
 
   useEffect(() => {
     if (user && token && !hasLoggedIn.current) {
-      toast.success('Login successful!');
+      toast.success("Login successful!");
       hasLoggedIn.current = true;
-      navigate('/');
+      navigate("/");
     }
   }, [user, token, navigate]);
 
@@ -63,7 +65,7 @@ export const Login = () => {
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
           disabled={loading}
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>

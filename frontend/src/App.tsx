@@ -20,12 +20,7 @@ const UserProfileWrapper: React.FC<{
 
   if (!userId) {
     // If no userId, show current user's profile
-    return (
-      <UserProfile
-        user={currentUser}
-        isOwnProfile={true}
-      />
-    );
+    return <UserProfile user={currentUser} isOwnProfile={true} />;
   }
 
   // For now, we'll redirect to the main profile page
@@ -38,7 +33,7 @@ function App() {
 
   // Get current user from Redux
   const { user: currentUser, loading: authLoading } = useSelector(
-    (state: RootState) => state.auth
+    (state: RootState) => state.auth,
   );
 
   // Fetch current user on app load if token exists
@@ -52,12 +47,11 @@ function App() {
   // Calculate notifications from Redux swaps state
   const swaps = useSelector((state: RootState) => state.swaps.swaps);
   const notifications = currentUser
-    ? swaps.filter(
-        (swap) => {
-          const toUserId = typeof swap.toUserId === 'string' ? swap.toUserId : swap.toUserId._id;
-          return toUserId === currentUser._id && swap.status === "pending";
-        }
-      ).length
+    ? swaps.filter((swap) => {
+        const toUserId =
+          typeof swap.toUserId === "string" ? swap.toUserId : swap.toUserId._id;
+        return toUserId === currentUser._id && swap.status === "pending";
+      }).length
     : 0;
 
   return (
@@ -77,9 +71,7 @@ function App() {
                   Loading...
                 </div>
               ) : currentUser ? (
-                <SkillBrowser
-                  currentUser={currentUser}
-                />
+                <SkillBrowser currentUser={currentUser} />
               ) : (
                 <Navigate to="/auth/login" replace />
               )
@@ -94,10 +86,7 @@ function App() {
                   Loading...
                 </div>
               ) : currentUser ? (
-                <UserProfile
-                  user={currentUser}
-                  isOwnProfile={true}
-                />
+                <UserProfile user={currentUser} isOwnProfile={true} />
               ) : (
                 <Navigate to="/auth/login" replace />
               )
@@ -112,9 +101,7 @@ function App() {
                   Loading...
                 </div>
               ) : currentUser ? (
-                <UserProfileWrapper
-                  currentUser={currentUser}
-                />
+                <UserProfileWrapper currentUser={currentUser} />
               ) : (
                 <Navigate to="/auth/login" replace />
               )
@@ -125,9 +112,7 @@ function App() {
             path="/swaps"
             element={
               currentUser ? (
-                <SwapRequests
-                  currentUser={currentUser}
-                />
+                <SwapRequests currentUser={currentUser} />
               ) : (
                 <Navigate to="/auth/login" replace />
               )

@@ -37,15 +37,18 @@ export const fetchSwaps = createAsyncThunk(
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Failed to fetch swaps");
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch swaps"
+        error.response?.data?.message || "Failed to fetch swaps",
       );
     }
-  }
+  },
 );
 
 export const createSwap = createAsyncThunk(
   "swaps/create",
-  async (data: Omit<SwapRequest, '_id' | 'status' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+  async (
+    data: Omit<SwapRequest, "_id" | "status" | "createdAt" | "updatedAt">,
+    { rejectWithValue },
+  ) => {
     try {
       const res = await swapApi.createSwap(data);
       toast.success("Swap request sent!");
@@ -54,17 +57,17 @@ export const createSwap = createAsyncThunk(
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Failed to create swap");
       return rejectWithValue(
-        error.response?.data?.message || "Failed to create swap"
+        error.response?.data?.message || "Failed to create swap",
       );
     }
-  }
+  },
 );
 
 export const updateSwap = createAsyncThunk(
   "swaps/update",
   async (
     { id, status }: { id: string; status: string },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const res = await swapApi.updateSwapStatus(id, status);
@@ -74,10 +77,10 @@ export const updateSwap = createAsyncThunk(
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Failed to update swap");
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update swap"
+        error.response?.data?.message || "Failed to update swap",
       );
     }
-  }
+  },
 );
 
 export const deleteSwap = createAsyncThunk(
@@ -91,10 +94,10 @@ export const deleteSwap = createAsyncThunk(
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Failed to delete swap");
       return rejectWithValue(
-        error.response?.data?.message || "Failed to delete swap"
+        error.response?.data?.message || "Failed to delete swap",
       );
     }
-  }
+  },
 );
 
 const swapsSlice = createSlice({
@@ -120,7 +123,7 @@ const swapsSlice = createSlice({
       })
       .addCase(updateSwap.fulfilled, (state, action) => {
         state.swaps = state.swaps.map((swap) =>
-          swap._id === action.payload._id ? action.payload : swap
+          swap._id === action.payload._id ? action.payload : swap,
         );
       })
       .addCase(deleteSwap.fulfilled, (state, action) => {

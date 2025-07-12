@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { User, MapPin, Calendar, Star, Edit2, Save, X, Plus, Loader2 } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store';
-import { updateUserProfile } from '../features/auth/authSlice';
-import type { User as UserType } from '../types';
+import React, { useState, useEffect } from "react";
+import {
+  User,
+  MapPin,
+  Calendar,
+  Star,
+  Edit2,
+  Save,
+  X,
+  Plus,
+  Loader2,
+} from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../store";
+import { updateUserProfile } from "../features/auth/authSlice";
+import type { User as UserType } from "../types";
 
 interface UserProfileProps {
   user: UserType;
@@ -11,14 +21,18 @@ interface UserProfileProps {
   isOwnProfile: boolean;
 }
 
-export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, isOwnProfile }) => {
+export const UserProfile: React.FC<UserProfileProps> = ({
+  user,
+  onUpdateUser,
+  isOwnProfile,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.auth);
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
-  const [newSkillOffered, setNewSkillOffered] = useState('');
-  const [newSkillWanted, setNewSkillWanted] = useState('');
+  const [newSkillOffered, setNewSkillOffered] = useState("");
+  const [newSkillWanted, setNewSkillWanted] = useState("");
 
   // Update editedUser when user prop changes
   useEffect(() => {
@@ -29,46 +43,56 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
     try {
       const userId = user._id || user.id;
       if (!userId) {
-        console.error('No user ID found');
+        console.error("No user ID found");
         return;
       }
-      
-      await dispatch(updateUserProfile({ 
-        userId, 
-        userData: editedUser 
-      })).unwrap();
-      
+
+      await dispatch(
+        updateUserProfile({
+          userId,
+          userData: editedUser,
+        }),
+      ).unwrap();
+
       setIsEditing(false);
       if (onUpdateUser) {
         onUpdateUser(editedUser);
       }
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error("Failed to update profile:", error);
     }
   };
 
-  const addSkill = (type: 'offered' | 'wanted') => {
-    const newSkill = type === 'offered' ? newSkillOffered : newSkillWanted;
+  const addSkill = (type: "offered" | "wanted") => {
+    const newSkill = type === "offered" ? newSkillOffered : newSkillWanted;
     if (newSkill.trim()) {
-      const skillsKey = type === 'offered' ? 'skillsOffered' : 'skillsWanted';
+      const skillsKey = type === "offered" ? "skillsOffered" : "skillsWanted";
       setEditedUser({
         ...editedUser,
-        [skillsKey]: [...editedUser[skillsKey], newSkill.trim()]
+        [skillsKey]: [...editedUser[skillsKey], newSkill.trim()],
       });
-      if (type === 'offered') setNewSkillOffered('');
-      else setNewSkillWanted('');
+      if (type === "offered") setNewSkillOffered("");
+      else setNewSkillWanted("");
     }
   };
 
-  const removeSkill = (type: 'offered' | 'wanted', index: number) => {
-    const skillsKey = type === 'offered' ? 'skillsOffered' : 'skillsWanted';
+  const removeSkill = (type: "offered" | "wanted", index: number) => {
+    const skillsKey = type === "offered" ? "skillsOffered" : "skillsWanted";
     setEditedUser({
       ...editedUser,
-      [skillsKey]: editedUser[skillsKey].filter((_: string, i: number) => i !== index)
+      [skillsKey]: editedUser[skillsKey].filter(
+        (_: string, i: number) => i !== index,
+      ),
     });
   };
 
-  const availabilityOptions = ['Weekdays', 'Weekends', 'Evenings', 'Mornings', 'Flexible'];
+  const availabilityOptions = [
+    "Weekdays",
+    "Weekends",
+    "Evenings",
+    "Mornings",
+    "Flexible",
+  ];
 
   if (loading) {
     return (
@@ -133,18 +157,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="grid grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{user.totalSwaps}</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {user.totalSwaps}
+              </div>
               <div className="text-sm text-gray-600">Swaps Completed</div>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center space-x-1">
                 <Star size={20} className="text-yellow-400 fill-current" />
-                <span className="text-2xl font-bold text-gray-900">{user.rating.toFixed(1)}</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {user.rating.toFixed(1)}
+                </span>
               </div>
               <div className="text-sm text-gray-600">Average Rating</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{user.skillsOffered.length}</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {user.skillsOffered.length}
+              </div>
               <div className="text-sm text-gray-600">Skills Offered</div>
             </div>
           </div>
@@ -156,20 +186,28 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
           {isEditing && isOwnProfile ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Name
+                </label>
                 <input
                   type="text"
                   value={editedUser.name}
-                  onChange={(e) => setEditedUser({ ...editedUser, name: e.target.value })}
+                  onChange={(e) =>
+                    setEditedUser({ ...editedUser, name: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location
+                </label>
                 <input
                   type="text"
-                  value={editedUser.location || ''}
-                  onChange={(e) => setEditedUser({ ...editedUser, location: e.target.value })}
+                  value={editedUser.location || ""}
+                  onChange={(e) =>
+                    setEditedUser({ ...editedUser, location: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -178,20 +216,31 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
                   <input
                     type="checkbox"
                     checked={editedUser.isPublic}
-                    onChange={(e) => setEditedUser({ ...editedUser, isPublic: e.target.checked })}
+                    onChange={(e) =>
+                      setEditedUser({
+                        ...editedUser,
+                        isPublic: e.target.checked,
+                      })
+                    }
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">Make profile public</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Make profile public
+                  </span>
                 </label>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  user.isPublic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {user.isPublic ? 'Public Profile' : 'Private Profile'}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    user.isPublic
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {user.isPublic ? "Public Profile" : "Private Profile"}
                 </span>
               </div>
             </div>
@@ -199,22 +248,29 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
 
           {/* Skills Offered */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Skills I Offer</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Skills I Offer
+            </h3>
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                {(isEditing ? editedUser : user).skillsOffered.map((skill: string, index: number) => (
-                  <div key={index} className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-                    <span>{skill}</span>
-                    {isEditing && isOwnProfile && (
-                      <button
-                        onClick={() => removeSkill('offered', index)}
-                        className="ml-2 text-blue-500 hover:text-blue-700"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {(isEditing ? editedUser : user).skillsOffered.map(
+                  (skill: string, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
+                    >
+                      <span>{skill}</span>
+                      {isEditing && isOwnProfile && (
+                        <button
+                          onClick={() => removeSkill("offered", index)}
+                          className="ml-2 text-blue-500 hover:text-blue-700"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ),
+                )}
               </div>
               {isEditing && isOwnProfile && (
                 <div className="flex space-x-2 mt-2">
@@ -224,10 +280,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
                     onChange={(e) => setNewSkillOffered(e.target.value)}
                     placeholder="Add a skill you offer"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    onKeyPress={(e) => e.key === 'Enter' && addSkill('offered')}
+                    onKeyPress={(e) => e.key === "Enter" && addSkill("offered")}
                   />
                   <button
-                    onClick={() => addSkill('offered')}
+                    onClick={() => addSkill("offered")}
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     <Plus size={16} />
@@ -239,22 +295,29 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
 
           {/* Skills Wanted */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Skills I Want to Learn</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Skills I Want to Learn
+            </h3>
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                {(isEditing ? editedUser : user).skillsWanted.map((skill: string, index: number) => (
-                  <div key={index} className="flex items-center bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm">
-                    <span>{skill}</span>
-                    {isEditing && isOwnProfile && (
-                      <button
-                        onClick={() => removeSkill('wanted', index)}
-                        className="ml-2 text-purple-500 hover:text-purple-700"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {(isEditing ? editedUser : user).skillsWanted.map(
+                  (skill: string, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm"
+                    >
+                      <span>{skill}</span>
+                      {isEditing && isOwnProfile && (
+                        <button
+                          onClick={() => removeSkill("wanted", index)}
+                          className="ml-2 text-purple-500 hover:text-purple-700"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ),
+                )}
               </div>
               {isEditing && isOwnProfile && (
                 <div className="flex space-x-2 mt-2">
@@ -264,10 +327,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
                     onChange={(e) => setNewSkillWanted(e.target.value)}
                     placeholder="Add a skill you want to learn"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    onKeyPress={(e) => e.key === 'Enter' && addSkill('wanted')}
+                    onKeyPress={(e) => e.key === "Enter" && addSkill("wanted")}
                   />
                   <button
-                    onClick={() => addSkill('wanted')}
+                    onClick={() => addSkill("wanted")}
                     className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
                   >
                     <Plus size={16} />
@@ -279,7 +342,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
 
           {/* Availability */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Availability</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Availability
+            </h3>
             {isEditing && isOwnProfile ? (
               <div className="space-y-2">
                 {availabilityOptions.map((option) => (
@@ -291,12 +356,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
                         if (e.target.checked) {
                           setEditedUser({
                             ...editedUser,
-                            availability: [...editedUser.availability, option]
+                            availability: [...editedUser.availability, option],
                           });
                         } else {
                           setEditedUser({
                             ...editedUser,
-                            availability: editedUser.availability.filter((a: string) => a !== option)
+                            availability: editedUser.availability.filter(
+                              (a: string) => a !== option,
+                            ),
                           });
                         }
                       }}
@@ -309,7 +376,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
             ) : (
               <div className="flex flex-wrap gap-2">
                 {user.availability.map((time: string, index: number) => (
-                  <span key={index} className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm">
+                  <span
+                    key={index}
+                    className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm"
+                  >
                     {time}
                   </span>
                 ))}
@@ -330,7 +400,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser, is
                 ) : (
                   <Save size={16} />
                 )}
-                <span>{loading ? 'Saving...' : 'Save Changes'}</span>
+                <span>{loading ? "Saving..." : "Save Changes"}</span>
               </button>
               <button
                 onClick={() => {

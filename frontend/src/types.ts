@@ -24,7 +24,7 @@ export interface SwapRequest {
   skillOffered: string;
   skillWanted: string;
   message?: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  status: "pending" | "accepted" | "rejected" | "completed" | "cancelled";
   createdAt: string;
   updatedAt: string;
 }
@@ -44,7 +44,7 @@ export interface AdminMessage {
   _id: string;
   title: string;
   content: string;
-  type: 'info' | 'warning' | 'update' | 'maintenance';
+  type: "info" | "warning" | "update" | "maintenance";
   createdAt: string;
   updatedAt?: string;
   isActive: boolean;

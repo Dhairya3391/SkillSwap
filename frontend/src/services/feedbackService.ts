@@ -1,5 +1,5 @@
-import api from '../features/auth/axiosConfig';
-import type { User } from '../types';
+import api from "../features/auth/axiosConfig";
+import type { User } from "../types";
 
 export interface Feedback {
   _id: string;
@@ -21,7 +21,7 @@ export interface CreateFeedbackData {
 
 // Get all feedback
 export const getAllFeedback = async (): Promise<Feedback[]> => {
-  const response = await api.get('/feedback');
+  const response = await api.get("/feedback");
   return response.data;
 };
 
@@ -32,12 +32,14 @@ export const getUserFeedback = async (userId: string): Promise<Feedback[]> => {
 };
 
 // Submit feedback
-export const submitFeedback = async (data: CreateFeedbackData): Promise<Feedback> => {
-  const response = await api.post('/feedback', data);
+export const submitFeedback = async (
+  data: CreateFeedbackData,
+): Promise<Feedback> => {
+  const response = await api.post("/feedback", data);
   return response.data;
 };
 
 // Delete feedback (admin only)
 export const deleteFeedback = async (feedbackId: string): Promise<void> => {
   await api.delete(`/feedback/${feedbackId}`);
-}; 
+};

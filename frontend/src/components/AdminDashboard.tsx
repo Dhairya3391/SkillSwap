@@ -1,21 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Users, MessageSquare, AlertTriangle, Download, Send, CheckCircle, BarChart3 } from 'lucide-react';
-import { RootState, AppDispatch } from '../store';
-import { fetchSwaps } from '../features/swaps/swapsSlice';
-import { getAllUsers } from '../services/userService';
-import type { User } from '../types';
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Users,
+  MessageSquare,
+  AlertTriangle,
+  Download,
+  Send,
+  CheckCircle,
+  BarChart3,
+} from "lucide-react";
+import { RootState, AppDispatch } from "../store";
+import { fetchSwaps } from "../features/swaps/swapsSlice";
+import { getAllUsers } from "../services/userService";
+import type { User } from "../types";
 
 export const AdminDashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { swaps } = useSelector((state: RootState) => state.swaps);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [showMessageModal, setShowMessageModal] = useState(false);
-  const [messageTitle, setMessageTitle] = useState('');
-  const [messageContent, setMessageContent] = useState('');
-  const [messageType, setMessageType] = useState<'info' | 'warning' | 'update' | 'maintenance'>('info');
+  const [messageTitle, setMessageTitle] = useState("");
+  const [messageContent, setMessageContent] = useState("");
+  const [messageType, setMessageType] = useState<
+    "info" | "warning" | "update" | "maintenance"
+  >("info");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,7 +34,7 @@ export const AdminDashboard: React.FC = () => {
         const fetchedUsers = await getAllUsers();
         setUsers(fetchedUsers);
       } catch (error) {
-        console.error('Failed to fetch admin data:', error);
+        console.error("Failed to fetch admin data:", error);
       } finally {
         setLoading(false);
       }
@@ -34,22 +44,29 @@ export const AdminDashboard: React.FC = () => {
 
   const stats = {
     totalUsers: users.length,
-    activeUsers: users.filter(u => !u.isBanned).length,
-    bannedUsers: users.filter(u => u.isBanned).length,
+    activeUsers: users.filter((u) => !u.isBanned).length,
+    bannedUsers: users.filter((u) => u.isBanned).length,
     totalSwaps: swaps.length,
-    pendingSwaps: swaps.filter(r => r.status === 'pending').length,
-    completedSwaps: swaps.filter(r => r.status === 'completed').length,
-    averageRating: users.length > 0 ? users.reduce((sum, u) => sum + u.rating, 0) / users.length : 0
+    pendingSwaps: swaps.filter((r) => r.status === "pending").length,
+    completedSwaps: swaps.filter((r) => r.status === "completed").length,
+    averageRating:
+      users.length > 0
+        ? users.reduce((sum, u) => sum + u.rating, 0) / users.length
+        : 0,
   };
 
   const handleSendMessage = () => {
     if (messageTitle && messageContent) {
       // TODO: Implement admin message sending
-      console.log('Sending admin message:', { messageTitle, messageContent, messageType });
+      console.log("Sending admin message:", {
+        messageTitle,
+        messageContent,
+        messageType,
+      });
       setShowMessageModal(false);
-      setMessageTitle('');
-      setMessageContent('');
-      setMessageType('info');
+      setMessageTitle("");
+      setMessageContent("");
+      setMessageType("info");
     }
   };
 
@@ -58,29 +75,31 @@ export const AdminDashboard: React.FC = () => {
     let filename;
 
     switch (type) {
-      case 'users':
-        data = users.map(u => ({
+      case "users":
+        data = users.map((u) => ({
           id: u._id,
           name: u.name,
           email: u.email,
           totalSwaps: u.totalSwaps,
           rating: u.rating,
           joinDate: u.joinDate,
-          isBanned: u.isBanned
+          isBanned: u.isBanned,
         }));
-        filename = 'users-report.json';
+        filename = "users-report.json";
         break;
-      case 'swaps':
+      case "swaps":
         data = swaps;
-        filename = 'swaps-report.json';
+        filename = "swaps-report.json";
         break;
       default:
         return;
     }
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.click();
@@ -100,8 +119,12 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage users, monitor activity, and oversee platform operations</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Admin Dashboard
+        </h1>
+        <p className="text-gray-600">
+          Manage users, monitor activity, and oversee platform operations
+        </p>
       </div>
 
       {/* Tabs */}
@@ -109,10 +132,10 @@ export const AdminDashboard: React.FC = () => {
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'users', label: 'Users', icon: Users },
-              { id: 'swaps', label: 'Swaps', icon: MessageSquare },
-              { id: 'messages', label: 'Messages', icon: Send }
+              { id: "overview", label: "Overview", icon: BarChart3 },
+              { id: "users", label: "Users", icon: Users },
+              { id: "swaps", label: "Swaps", icon: MessageSquare },
+              { id: "messages", label: "Messages", icon: Send },
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -121,8 +144,8 @@ export const AdminDashboard: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 py-4 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   <Icon size={16} />
@@ -135,7 +158,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Overview Tab */}
-      {activeTab === 'overview' && (
+      {activeTab === "overview" && (
         <div className="space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -145,8 +168,12 @@ export const AdminDashboard: React.FC = () => {
                   <Users className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Users
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.totalUsers}
+                  </p>
                 </div>
               </div>
             </div>
@@ -157,8 +184,12 @@ export const AdminDashboard: React.FC = () => {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Active Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeUsers}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Active Users
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.activeUsers}
+                  </p>
                 </div>
               </div>
             </div>
@@ -169,8 +200,12 @@ export const AdminDashboard: React.FC = () => {
                   <MessageSquare className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Swaps</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalSwaps}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Swaps
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.totalSwaps}
+                  </p>
                 </div>
               </div>
             </div>
@@ -181,8 +216,12 @@ export const AdminDashboard: React.FC = () => {
                   <AlertTriangle className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Avg Rating</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.averageRating.toFixed(1)}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Avg Rating
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.averageRating.toFixed(1)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -190,23 +229,42 @@ export const AdminDashboard: React.FC = () => {
 
           {/* Recent Activity */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Recent Activity
+            </h3>
             <div className="space-y-3">
               {swaps.slice(0, 5).map((swap) => {
-                const fromUser = users.find(u => u._id === swap.fromUserId._id);
-                const toUser = users.find(u => u._id === swap.toUserId._id);
+                const fromUser = users.find(
+                  (u) => u._id === swap.fromUserId._id,
+                );
+                const toUser = users.find((u) => u._id === swap.toUserId._id);
                 return (
-                  <div key={swap._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={swap._id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div>
-                      <span className="font-medium">{fromUser?.name || 'Unknown'}</span> requested to learn{' '}
-                      <span className="font-medium text-blue-600">{swap.skillWanted}</span> from{' '}
-                      <span className="font-medium">{toUser?.name || 'Unknown'}</span>
+                      <span className="font-medium">
+                        {fromUser?.name || "Unknown"}
+                      </span>{" "}
+                      requested to learn{" "}
+                      <span className="font-medium text-blue-600">
+                        {swap.skillWanted}
+                      </span>{" "}
+                      from{" "}
+                      <span className="font-medium">
+                        {toUser?.name || "Unknown"}
+                      </span>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      swap.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      swap.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        swap.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : swap.status === "accepted"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
                       {swap.status}
                     </span>
                   </div>
@@ -218,12 +276,14 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {/* Users Tab */}
-      {activeTab === 'users' && (
+      {activeTab === "users" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              User Management
+            </h3>
             <button
-              onClick={() => downloadReport('users')}
+              onClick={() => downloadReport("users")}
               className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
             >
               <Download size={16} />
@@ -236,12 +296,24 @@ export const AdminDashboard: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Swaps</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Swaps
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rating
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -253,34 +325,51 @@ export const AdminDashboard: React.FC = () => {
                             <Users size={14} className="text-white" />
                           </div>
                           <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                            <div className="text-sm text-gray-500">{user.location}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {user.location}
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalSwaps}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.rating.toFixed(1)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.totalSwaps}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.rating.toFixed(1)}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.isBanned ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                        }`}>
-                          {user.isBanned ? 'Banned' : 'Active'}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            user.isBanned
+                              ? "bg-red-100 text-red-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {user.isBanned ? "Banned" : "Active"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           className={`px-3 py-1 rounded text-xs ${
-                            user.isBanned 
-                              ? 'bg-green-500 text-white hover:bg-green-600' 
-                              : 'bg-red-500 text-white hover:bg-red-600'
+                            user.isBanned
+                              ? "bg-green-500 text-white hover:bg-green-600"
+                              : "bg-red-500 text-white hover:bg-red-600"
                           }`}
                           onClick={() => {
                             // TODO: Implement ban/unban functionality
-                            console.log(`${user.isBanned ? 'Unban' : 'Ban'} user:`, user._id);
+                            console.log(
+                              `${user.isBanned ? "Unban" : "Ban"} user:`,
+                              user._id,
+                            );
                           }}
                         >
-                          {user.isBanned ? 'Unban' : 'Ban'}
+                          {user.isBanned ? "Unban" : "Ban"}
                         </button>
                       </td>
                     </tr>
@@ -293,12 +382,14 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {/* Swaps Tab */}
-      {activeTab === 'swaps' && (
+      {activeTab === "swaps" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Swap Management</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Swap Management
+            </h3>
             <button
-              onClick={() => downloadReport('swaps')}
+              onClick={() => downloadReport("swaps")}
               className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
             >
               <Download size={16} />
@@ -311,32 +402,53 @@ export const AdminDashboard: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offered</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wanted</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      From
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      To
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Offered
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Wanted
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {swaps.map((swap) => (
                     <tr key={swap._id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {swap.fromUserId?.name || 'Unknown'}
+                        {swap.fromUserId?.name || "Unknown"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {swap.toUserId?.name || 'Unknown'}
+                        {swap.toUserId?.name || "Unknown"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{swap.skillOffered}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{swap.skillWanted}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {swap.skillOffered}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {swap.skillWanted}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          swap.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          swap.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          swap.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            swap.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : swap.status === "accepted"
+                                ? "bg-green-100 text-green-800"
+                                : swap.status === "rejected"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
                           {swap.status}
                         </span>
                       </td>
@@ -353,10 +465,12 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {/* Messages Tab */}
-      {activeTab === 'messages' && (
+      {activeTab === "messages" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Admin Messages</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Admin Messages
+            </h3>
             <button
               onClick={() => setShowMessageModal(true)}
               className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
@@ -367,7 +481,10 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <p className="text-gray-600">No messages sent yet. Use the button above to send your first admin message.</p>
+            <p className="text-gray-600">
+              No messages sent yet. Use the button above to send your first
+              admin message.
+            </p>
           </div>
         </div>
       )}
@@ -376,14 +493,26 @@ export const AdminDashboard: React.FC = () => {
       {showMessageModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Send Admin Message</h3>
-            
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Send Admin Message
+            </h3>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message Type
+                </label>
                 <select
                   value={messageType}
-                  onChange={(e) => setMessageType(e.target.value as 'info' | 'warning' | 'update' | 'maintenance')}
+                  onChange={(e) =>
+                    setMessageType(
+                      e.target.value as
+                        | "info"
+                        | "warning"
+                        | "update"
+                        | "maintenance",
+                    )
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="info">Information</option>
@@ -394,7 +523,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Title
+                </label>
                 <input
                   type="text"
                   value={messageTitle}
@@ -405,7 +536,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Content
+                </label>
                 <textarea
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}

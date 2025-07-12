@@ -38,7 +38,7 @@ export const registerUser = createAsyncThunk(
       email,
       password,
     }: { name: string; email: string; password: string },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const res = await api.post("/auth/register", {
@@ -50,17 +50,17 @@ export const registerUser = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as ApiError;
       return rejectWithValue(
-        error.response?.data?.message || "Registration failed"
+        error.response?.data?.message || "Registration failed",
       );
     }
-  }
+  },
 );
 
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (
     { email, password }: { email: string; password: string },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const res = await api.post("/auth/login", { email, password });
@@ -69,7 +69,7 @@ export const loginUser = createAsyncThunk(
       const error = err as ApiError;
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
-  }
+  },
 );
 
 // Get current user profile
@@ -82,10 +82,10 @@ export const fetchCurrentUser = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as ApiError;
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch user"
+        error.response?.data?.message || "Failed to fetch user",
       );
     }
-  }
+  },
 );
 
 // Update user profile
@@ -93,7 +93,7 @@ export const updateUserProfile = createAsyncThunk(
   "auth/updateUserProfile",
   async (
     { userId, userData }: { userId: string; userData: UpdateUserData },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const updatedUser = await updateUserApi(userId, userData);
@@ -101,10 +101,10 @@ export const updateUserProfile = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as ApiError;
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update user"
+        error.response?.data?.message || "Failed to update user",
       );
     }
-  }
+  },
 );
 
 // Get user by ID
@@ -117,10 +117,10 @@ export const fetchUserById = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as ApiError;
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch user"
+        error.response?.data?.message || "Failed to fetch user",
       );
     }
-  }
+  },
 );
 
 const authSlice = createSlice({

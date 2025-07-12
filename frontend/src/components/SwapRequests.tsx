@@ -14,12 +14,10 @@ interface SwapRequestsProps {
   currentUser: User;
 }
 
-export const SwapRequests: React.FC<SwapRequestsProps> = ({
-  currentUser,
-}) => {
+export const SwapRequests: React.FC<SwapRequestsProps> = ({ currentUser }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { swaps, loading, error } = useSelector(
-    (state: RootState) => state.swaps
+    (state: RootState) => state.swaps,
   );
   const [users, setUsers] = useState<User[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -47,7 +45,7 @@ export const SwapRequests: React.FC<SwapRequestsProps> = ({
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };

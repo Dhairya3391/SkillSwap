@@ -18,9 +18,7 @@ interface SkillBrowserProps {
   currentUser: User;
 }
 
-export const SkillBrowser: React.FC<SkillBrowserProps> = ({
-  currentUser,
-}) => {
+export const SkillBrowser: React.FC<SkillBrowserProps> = ({ currentUser }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const [users, setUsers] = useState<User[]>([]);
@@ -55,7 +53,7 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
     const matchesSearch =
       searchTerm === "" ||
       user.skillsOffered.some((skill: string) =>
-        skill.toLowerCase().includes(searchTerm.toLowerCase())
+        skill.toLowerCase().includes(searchTerm.toLowerCase()),
       ) ||
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.location?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -70,12 +68,14 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
 
   const handleRequestSwap = () => {
     if (selectedUser && selectedSkill && mySkillToOffer) {
-      dispatch(createSwap({
-        toUserId: selectedUser._id,
-        skillOffered: mySkillToOffer,
-        skillWanted: selectedSkill,
-        message: requestMessage
-      }));
+      dispatch(
+        createSwap({
+          toUserId: selectedUser._id,
+          skillOffered: mySkillToOffer,
+          skillWanted: selectedSkill,
+          message: requestMessage,
+        }),
+      );
       setShowRequestModal(false);
       setSelectedUser(null);
       setSelectedSkill("");
@@ -290,7 +290,7 @@ export const SkillBrowser: React.FC<SkillBrowserProps> = ({
                       <option key={index} value={skill}>
                         {skill}
                       </option>
-                    )
+                    ),
                   )}
                 </select>
               </div>

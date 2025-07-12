@@ -1,25 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { registerUser } from '../../features/auth/authSlice';
-import { RootState, AppDispatch } from '../../store';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser } from "../../features/auth/authSlice";
+import { RootState, AppDispatch } from "../../store";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const Register = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { user, loading, error, token } = useSelector((state: RootState) => state.auth);
+  const { user, loading, error, token } = useSelector(
+    (state: RootState) => state.auth,
+  );
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const hasRegistered = useRef(false);
 
   useEffect(() => {
     if (user && token && !hasRegistered.current) {
-      toast.success('Registration successful!');
+      toast.success("Registration successful!");
       hasRegistered.current = true;
-      navigate('/');
+      navigate("/");
     }
   }, [user, token, navigate]);
 
@@ -74,7 +76,7 @@ export const Register = () => {
           className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
           disabled={loading}
         >
-          {loading ? 'Registering...' : 'Register'}
+          {loading ? "Registering..." : "Register"}
         </button>
       </form>
     </div>
